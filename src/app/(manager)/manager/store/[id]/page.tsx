@@ -279,7 +279,7 @@ export default function ManagerStoreDetailPage() {
           </div>
 
           {/* Owner Info */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 pt-6 border-t">
             {store.owner_name && (
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
@@ -287,16 +287,33 @@ export default function ManagerStoreDetailPage() {
               </div>
             )}
             {store.owner_email && (
-              <div className="flex items-center gap-2">
+              <a 
+                href={`mailto:${store.owner_email}`}
+                className="flex items-center gap-2 hover:text-primary transition-colors"
+              >
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{store.owner_email}</span>
-              </div>
+                <span className="hover:underline">{store.owner_email}</span>
+              </a>
             )}
             {store.owner_phone && (
-              <div className="flex items-center gap-2">
+              <a 
+                href={`tel:${store.owner_phone}`}
+                className="flex items-center gap-2 hover:text-primary transition-colors"
+              >
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span dir="ltr">{store.owner_phone}</span>
-              </div>
+                <span dir="ltr" className="hover:underline">{store.owner_phone}</span>
+              </a>
+            )}
+            {store.owner_phone && (
+              <a 
+                href={`https://wa.me/${store.owner_phone.replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-green-500 hover:text-green-400 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>واتساب</span>
+              </a>
             )}
           </div>
 
