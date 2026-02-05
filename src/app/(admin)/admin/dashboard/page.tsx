@@ -115,283 +115,190 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // جلب إحصائيات المتاجر
-        const { count: totalStores } = await supabase
-          .from('stores')
-          .select('*', { count: 'exact', head: true })
-
-        const { count: activeStores } = await supabase
-          .from('stores')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active')
-
-        // جلب عدد مدراء العلاقات فقط (بدون الأدمن)
-        const { count: totalManagers } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('role', 'manager')
-
-        // جلب إحصائيات المهام من store_tasks
-        const { count: pendingTasks } = await supabase
-          .from('store_tasks')
-          .select('*', { count: 'exact', head: true })
-          .in('status', ['new', 'in_progress'])
-
-        const { count: overdueTasksCount } = await supabase
-          .from('store_tasks')
-          .select('*', { count: 'exact', head: true })
-          .lt('due_date', new Date().toISOString())
-          .in('status', ['new', 'in_progress'])
-
-        // جلب عدد التعاميم النشطة
-        const { count: activeAnnouncements } = await supabase
-          .from('announcements')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'sent')
-
-        // جلب عدد المهام المكتملة
-        const { count: completedTasks } = await supabase
-          .from('store_tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'done')
-
-        // جلب متوسط التقييمات
-        const { data: ratingsData } = await supabase
-          .from('manager_ratings')
-          .select('rating')
-        
-        const avgRating = ratingsData && ratingsData.length > 0
-          ? ratingsData.reduce((sum, r) => sum + r.rating, 0) / ratingsData.length
-          : 0
-
-        // جلب اجتماعات هذا الأسبوع
+        // التواريخ المطلوبة
+        const now = new Date()
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
         const startOfWeek = new Date()
         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
         startOfWeek.setHours(0, 0, 0, 0)
         const endOfWeek = new Date(startOfWeek)
         endOfWeek.setDate(endOfWeek.getDate() + 7)
-
-        const { count: meetingsThisWeek } = await supabase
-          .from('meetings')
-          .select('*', { count: 'exact', head: true })
-          .gte('meeting_date', startOfWeek.toISOString())
-          .lt('meeting_date', endOfWeek.toISOString())
-
-        // جلب التعليقات الجديدة اليوم
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        const { count: newCommentsToday } = await supabase
-          .from('store_comments')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', today.toISOString())
-
-        // حساب نسب التغيير (مقارنة بالشهر الماضي)
         const lastMonth = new Date()
         lastMonth.setMonth(lastMonth.getMonth() - 1)
-        
-        const { count: storesLastMonth } = await supabase
-          .from('stores')
-          .select('*', { count: 'exact', head: true })
-          .lt('created_at', lastMonth.toISOString())
-        
-        const storesChange = storesLastMonth && storesLastMonth > 0 
-          ? Math.round(((totalStores || 0) - storesLastMonth) / storesLastMonth * 100)
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+        // جلب جميع البيانات الأساسية بشكل متوازي
+        const [
+          totalStoresRes,
+          activeStoresRes,
+          totalManagersRes,
+          pendingTasksRes,
+          overdueTasksRes,
+          completedTasksRes,
+          activeAnnouncementsRes,
+          ratingsDataRes,
+          meetingsThisWeekRes,
+          newCommentsTodayRes,
+          storesLastMonthRes,
+          tasksLastMonthRes,
+          storesGrowthRes,
+          recentStoresRes,
+          overdueTasksListRes,
+          managersRes
+        ] = await Promise.all([
+          supabase.from('stores').select('*', { count: 'exact', head: true }),
+          supabase.from('stores').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'manager'),
+          supabase.from('store_tasks').select('*', { count: 'exact', head: true }).in('status', ['new', 'in_progress']),
+          supabase.from('store_tasks').select('*', { count: 'exact', head: true }).lt('due_date', now.toISOString()).in('status', ['new', 'in_progress']),
+          supabase.from('store_tasks').select('*', { count: 'exact', head: true }).eq('status', 'done'),
+          supabase.from('announcements').select('*', { count: 'exact', head: true }).eq('status', 'sent'),
+          supabase.from('manager_ratings').select('rating'),
+          supabase.from('meetings').select('*', { count: 'exact', head: true }).gte('meeting_date', startOfWeek.toISOString()).lt('meeting_date', endOfWeek.toISOString()),
+          supabase.from('store_comments').select('*', { count: 'exact', head: true }).gte('created_at', today.toISOString()),
+          supabase.from('stores').select('*', { count: 'exact', head: true }).lt('created_at', lastMonth.toISOString()),
+          supabase.from('store_tasks').select('*', { count: 'exact', head: true }).eq('status', 'done').lt('created_at', lastMonth.toISOString()),
+          supabase.from('stores').select('created_at').gte('created_at', thirtyDaysAgo.toISOString()).order('created_at', { ascending: true }),
+          supabase.from('stores').select('id, store_name, status, created_at').order('created_at', { ascending: false }).limit(5),
+          supabase.from('store_tasks').select('id, title, due_date').lt('due_date', now.toISOString()).in('status', ['new', 'in_progress']).order('due_date', { ascending: true }).limit(5),
+          supabase.from('profiles').select('id, name').eq('role', 'manager')
+        ])
+
+        // استخراج القيم
+        const totalStores = totalStoresRes.count || 0
+        const activeStores = activeStoresRes.count || 0
+        const totalManagers = totalManagersRes.count || 0
+        const pendingTasks = pendingTasksRes.count || 0
+        const overdueTasksCount = overdueTasksRes.count || 0
+        const completedTasks = completedTasksRes.count || 0
+        const activeAnnouncements = activeAnnouncementsRes.count || 0
+        const ratingsData = ratingsDataRes.data || []
+        const meetingsThisWeek = meetingsThisWeekRes.count || 0
+        const newCommentsToday = newCommentsTodayRes.count || 0
+        const storesLastMonth = storesLastMonthRes.count || 0
+        const tasksLastMonth = tasksLastMonthRes.count || 0
+        const storesGrowth = storesGrowthRes.data || []
+        const managers = managersRes.data || []
+
+        // حساب المتوسطات والنسب
+        const avgRating = ratingsData.length > 0
+          ? ratingsData.reduce((sum, r) => sum + r.rating, 0) / ratingsData.length
           : 0
 
-        const { count: tasksLastMonth } = await supabase
-          .from('store_tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'done')
-          .lt('created_at', lastMonth.toISOString())
-        
-        const tasksChange = tasksLastMonth && tasksLastMonth > 0
-          ? Math.round(((completedTasks || 0) - tasksLastMonth) / tasksLastMonth * 100)
+        const storesChange = storesLastMonth > 0 
+          ? Math.round((totalStores - storesLastMonth) / storesLastMonth * 100)
           : 0
 
+        const tasksChange = tasksLastMonth > 0
+          ? Math.round((completedTasks - tasksLastMonth) / tasksLastMonth * 100)
+          : 0
+
+        // تحديث الإحصائيات
         setStats({
-          total_stores: totalStores || 0,
-          active_stores: activeStores || 0,
-          total_managers: totalManagers || 0,
-          pending_tasks: pendingTasks || 0,
-          overdue_tasks: overdueTasksCount || 0,
-          completed_tasks: completedTasks || 0,
-          active_announcements: activeAnnouncements || 0,
+          total_stores: totalStores,
+          active_stores: activeStores,
+          total_managers: totalManagers,
+          pending_tasks: pendingTasks,
+          overdue_tasks: overdueTasksCount,
+          completed_tasks: completedTasks,
+          active_announcements: activeAnnouncements,
           average_rating: Math.round(avgRating * 10) / 10,
-          total_ratings: ratingsData?.length || 0,
-          meetings_this_week: meetingsThisWeek || 0,
-          new_comments_today: newCommentsToday || 0,
+          total_ratings: ratingsData.length,
+          meetings_this_week: meetingsThisWeek,
+          new_comments_today: newCommentsToday,
           stores_change: storesChange,
           tasks_change: tasksChange,
           managers_change: 0
         })
 
-        // جلب بيانات نمو المتاجر خلال الشهر
-        const thirtyDaysAgo = new Date()
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-        
-        const { data: storesGrowth } = await supabase
-          .from('stores')
-          .select('created_at')
-          .gte('created_at', thirtyDaysAgo.toISOString())
-          .order('created_at', { ascending: true })
-
-        // تجميع البيانات حسب اليوم
+        // تجميع بيانات نمو المتاجر
         const growthByDay: { [key: string]: number } = {}
         const arabicDays = ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت']
         
         for (let i = 6; i >= 0; i--) {
           const date = new Date()
           date.setDate(date.getDate() - i)
-          const dayName = arabicDays[date.getDay()]
-          growthByDay[dayName] = 0
+          growthByDay[arabicDays[date.getDay()]] = 0
         }
 
-        storesGrowth?.forEach(store => {
-          const date = new Date(store.created_at)
-          const dayName = arabicDays[date.getDay()]
-          if (growthByDay[dayName] !== undefined) {
-            growthByDay[dayName]++
-          }
+        storesGrowth.forEach(store => {
+          const dayName = arabicDays[new Date(store.created_at).getDay()]
+          if (growthByDay[dayName] !== undefined) growthByDay[dayName]++
         })
 
-        setStoreGrowthData(
-          Object.entries(growthByDay).map(([date, count]) => ({ date, count }))
-        )
-
-        // بيانات توزيع حالات المهام
+        setStoreGrowthData(Object.entries(growthByDay).map(([date, count]) => ({ date, count })))
         setTaskStatusData([
-          { name: 'مكتملة', value: completedTasks || 0, color: '#22c55e' },
-          { name: 'قيد التنفيذ', value: pendingTasks || 0, color: '#f59e0b' },
-          { name: 'متأخرة', value: overdueTasksCount || 0, color: '#ef4444' }
+          { name: 'مكتملة', value: completedTasks, color: '#22c55e' },
+          { name: 'قيد التنفيذ', value: pendingTasks, color: '#f59e0b' },
+          { name: 'متأخرة', value: overdueTasksCount, color: '#ef4444' }
         ])
+        setRecentStores(recentStoresRes.data || [])
+        setOverdueTasks(overdueTasksListRes.data || [])
 
-        // جلب آخر المتاجر المضافة
-        const { data: stores } = await supabase
-          .from('stores')
-          .select('id, store_name, status, created_at')
-          .order('created_at', { ascending: false })
-          .limit(5)
+        // جلب بيانات المدراء بشكل متوازي
+        if (managers.length > 0) {
+          const managerDataPromises = managers.map(async (manager) => {
+            const [ratingsRes, storesRes] = await Promise.all([
+              supabase.from('manager_ratings').select('rating').eq('manager_id', manager.id),
+              supabase.from('stores').select('id').eq('assigned_manager_id', manager.id)
+            ])
+            
+            const ratings = ratingsRes.data || []
+            const managerStores = storesRes.data || []
+            const storeIds = managerStores.map(s => s.id)
+            
+            let completedCount = 0, totalCount = 0
+            if (storeIds.length > 0) {
+              const [completedRes, totalRes] = await Promise.all([
+                supabase.from('store_tasks').select('*', { count: 'exact', head: true }).in('store_id', storeIds).eq('status', 'done'),
+                supabase.from('store_tasks').select('*', { count: 'exact', head: true }).in('store_id', storeIds)
+              ])
+              completedCount = completedRes.count || 0
+              totalCount = totalRes.count || 0
+            }
 
-        setRecentStores(stores || [])
+            const managerAvgRating = ratings.length > 0
+              ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+              : 0
 
-        // جلب المهام المتأخرة
-        const { data: tasks } = await supabase
-          .from('store_tasks')
-          .select('id, title, due_date')
-          .lt('due_date', new Date().toISOString())
-          .in('status', ['new', 'in_progress'])
-          .order('due_date', { ascending: true })
-          .limit(5)
+            return {
+              id: manager.id,
+              name: manager.name || 'غير محدد',
+              avgRating: Math.round(managerAvgRating * 10) / 10,
+              ratingsCount: ratings.length,
+              storeCount: storeIds.length,
+              completedTasks: completedCount,
+              totalTasks: totalCount,
+              completionRate: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
+            }
+          })
 
-        setOverdueTasks(tasks || [])
+          const managersData = await Promise.all(managerDataPromises)
 
-        // جلب أفضل 5 مدراء حسب معدل التقييم
-        const { data: managers } = await supabase
-          .from('profiles')
-          .select('id, name')
-          .eq('role', 'manager')
-
-        if (managers && managers.length > 0) {
-          // جلب التقييمات لكل مدير
-          const managersWithRatings = await Promise.all(
-            managers.map(async (manager) => {
-              const { data: ratings } = await supabase
-                .from('manager_ratings')
-                .select('rating')
-                .eq('manager_id', manager.id)
-              
-              const avgRating = ratings && ratings.length > 0
-                ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
-                : 0
-              
-              return {
-                id: manager.id,
-                name: manager.name || 'غير محدد',
-                value: Math.round(avgRating * 10) / 10,
-                subtitle: `${ratings?.length || 0} تقييم`
-              }
-            })
-          )
-          
           setTopRatedManagers(
-            managersWithRatings
-              .filter(m => m.value > 0)
-              .sort((a, b) => b.value - a.value)
+            managersData
+              .filter(m => m.avgRating > 0)
+              .sort((a, b) => b.avgRating - a.avgRating)
               .slice(0, 5)
+              .map(m => ({ id: m.id, name: m.name, value: m.avgRating, subtitle: `${m.ratingsCount} تقييم` }))
           )
 
-          // جلب أفضل 5 مدراء حسب نسبة إنجاز المهام (المهام المرتبطة بمتاجرهم)
-          const managersWithCompletion = await Promise.all(
-            managers.map(async (manager) => {
-              // جلب المتاجر المسندة للمدير
-              const { data: managerStores } = await supabase
-                .from('stores')
-                .select('id')
-                .eq('assigned_manager_id', manager.id)
-              
-              const storeIds = managerStores?.map(s => s.id) || []
-              
-              let completedCount = 0
-              let totalCount = 0
-              
-              if (storeIds.length > 0) {
-                const { count: completed } = await supabase
-                  .from('store_tasks')
-                  .select('*', { count: 'exact', head: true })
-                  .in('store_id', storeIds)
-                  .eq('status', 'done')
-                
-                const { count: total } = await supabase
-                  .from('store_tasks')
-                  .select('*', { count: 'exact', head: true })
-                  .in('store_id', storeIds)
-                
-                completedCount = completed || 0
-                totalCount = total || 0
-              }
-              
-              const completionRate = totalCount > 0
-                ? Math.round((completedCount / totalCount) * 100)
-                : 0
-              
-              return {
-                id: manager.id,
-                name: manager.name || 'غير محدد',
-                value: completionRate,
-                subtitle: `${completedCount} من ${totalCount} مهمة`
-              }
-            })
-          )
-          
           setTopCompletionManagers(
-            managersWithCompletion
-              .filter(m => m.subtitle !== '0 من 0 مهمة')
-              .sort((a, b) => b.value - a.value)
+            managersData
+              .filter(m => m.totalTasks > 0)
+              .sort((a, b) => b.completionRate - a.completionRate)
               .slice(0, 5)
+              .map(m => ({ id: m.id, name: m.name, value: m.completionRate, subtitle: `${m.completedTasks} من ${m.totalTasks} مهمة` }))
           )
 
-          // جلب أكثر المدراء إسناداً للمتاجر
-          const managersWithStores = await Promise.all(
-            managers.map(async (manager) => {
-              const { count: storeCount } = await supabase
-                .from('stores')
-                .select('*', { count: 'exact', head: true })
-                .eq('assigned_manager_id', manager.id)
-              
-              return {
-                id: manager.id,
-                name: manager.name || 'غير محدد',
-                value: storeCount || 0,
-                subtitle: 'متجر'
-              }
-            })
-          )
-          
           setTopStoreManagers(
-            managersWithStores
-              .filter(m => m.value > 0)
-              .sort((a, b) => b.value - a.value)
+            managersData
+              .filter(m => m.storeCount > 0)
+              .sort((a, b) => b.storeCount - a.storeCount)
               .slice(0, 5)
+              .map(m => ({ id: m.id, name: m.name, value: m.storeCount, subtitle: 'متجر' }))
           )
         }
 
