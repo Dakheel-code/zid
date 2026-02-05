@@ -1,0 +1,54 @@
+-- ============================================
+-- ZID Dashboard - Store Comments System
+-- نظام التعليقات للمتاجر
+-- ============================================
+
+-- جدول التعليقات
+CREATE TABLE IF NOT EXISTS store_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+  
+  -- معلومات المرسل
+  sender_type TEXT NOT NULL CHECK (sender_type IN ('merchant', 'manager')),
+  sender_name TEXT, -- اسم التاجر إذا كان المرسل تاجر
+  manager_id UUID REFERENCES profiles(id), -- معرف المدير إذا كان المرسل مدير
+  
+  -- محتوى التعليق
+  content TEXT NOT NULL,
+  
+  -- حالة التعليق
+  is_read BOOLEAN DEFAULT FALSE,
+  
+  -- التواريخ
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- فهرس للبحث السريع
+CREATE INDEX IF NOT EXISTS idx_store_comments_store_id ON store_comments(store_id);
+CREATE INDEX IF NOT EXISTS idx_store_comments_created_at ON store_comments(created_at DESC);
+
+-- تفعيل RLS
+ALTER TABLE store_comments ENABLE ROW LEVEL SECURITY;
+
+-- سياسات الوصول
+CREATE POLICY "allow_read_comments" ON store_comments FOR SELECT USING (true);
+CREATE POLICY "allow_insert_comments" ON store_comments FOR INSERT WITH CHECK (true);
+CREATE POLICY "allow_update_comments" ON store_comments FOR UPDATE USING (true);
+
+-- Trigger لتحديث updated_at
+CREATE OR REPLACE FUNCTION update_store_comments_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_update_store_comments_updated_at ON store_comments;
+CREATE TRIGGER trigger_update_store_comments_updated_at
+  BEFORE UPDATE ON store_comments
+  FOR EACH ROW EXECUTE FUNCTION update_store_comments_updated_at();
+
+-- عرض النتيجة
+SELECT 'تم إنشاء جدول التعليقات بنجاح!' as message;

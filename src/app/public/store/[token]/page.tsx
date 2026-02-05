@@ -11,7 +11,8 @@ import {
   Plus,
   AlertTriangle,
   Phone,
-  Mail
+  Mail,
+  Calendar
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -28,8 +29,10 @@ interface PublicStoreData {
   manager: {
     id: string
     name: string | null
+    email: string | null
     phone: string | null
     avatar_url: string | null
+    booking_slug: string | null
   }
   tasks: Array<{
     id: string
@@ -52,6 +55,17 @@ export default function PublicStorePage() {
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [newTask, setNewTask] = useState({ title: '', description: '', name: '', contact: '' })
   const [submitting, setSubmitting] = useState(false)
+  
+  // التعليقات
+  const [comments, setComments] = useState<Array<{
+    id: string
+    content: string
+    sender_type: 'merchant' | 'manager'
+    sender_name: string | null
+    created_at: string
+  }>>([])
+  const [newComment, setNewComment] = useState('')
+  const [submittingComment, setSubmittingComment] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -78,26 +92,34 @@ export default function PublicStorePage() {
         }
 
         // جلب بيانات مدير العلاقة
-        let managerData = { id: '', name: null, phone: null, avatar_url: null }
+        let managerData = { id: '', name: null, email: null, phone: null, avatar_url: null, booking_slug: null }
         if (storeData.assigned_manager_id) {
           const { data: manager } = await supabase
             .from('profiles')
-            .select('id, name, phone, avatar_url')
+            .select('id, name, email, phone, avatar_url, booking_slug')
             .eq('id', storeData.assigned_manager_id)
             .single()
           
           if (manager) {
-            managerData = manager
+            managerData = {
+              id: manager.id,
+              name: manager.name,
+              email: manager.email,
+              phone: manager.phone,
+              avatar_url: manager.avatar_url,
+              booking_slug: manager.booking_slug
+            }
           }
         }
 
         // جلب مهام المتجر
-        const { data: tasksData } = await supabase
+        const { data: tasksData, error: tasksError } = await supabase
           .from('store_tasks')
-          .select('id, title, description, status, section_title')
+          .select('id, title, description, status')
           .eq('store_id', storeId)
-          .eq('visible_to_merchant', true)
-          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true })
+        
+        console.log('Tasks data:', tasksData, 'Error:', tasksError)
 
         const formattedData: PublicStoreData = {
           store: {
@@ -109,21 +131,35 @@ export default function PublicStorePage() {
           manager: {
             id: managerData.id || '',
             name: managerData.name,
+            email: managerData.email,
             phone: managerData.phone,
-            avatar_url: managerData.avatar_url
+            avatar_url: managerData.avatar_url,
+            booking_slug: managerData.booking_slug
           },
           tasks: (tasksData || []).map(task => ({
             id: task.id,
             title: task.title,
             description: task.description,
             status: task.status === 'done' ? 'done' : 'pending',
-            section_title: task.section_title
+            section_title: null
           })),
           is_expired: false,
           expires_at: null
         }
         
         setData(formattedData)
+        
+        // جلب التعليقات
+        const { data: commentsData } = await supabase
+          .from('store_comments')
+          .select('id, content, sender_type, sender_name, created_at')
+          .eq('store_id', storeId)
+          .order('created_at', { ascending: true })
+        
+        if (commentsData) {
+          setComments(commentsData)
+        }
+        
         setLoading(false)
       } catch (err) {
         console.error('Error fetching store data:', err)
@@ -136,6 +172,33 @@ export default function PublicStorePage() {
       fetchData()
     }
   }, [token])
+  
+  // إرسال تعليق جديد
+  const handleSubmitComment = async () => {
+    if (!newComment.trim() || !data?.store.store_name) return
+    
+    setSubmittingComment(true)
+    try {
+      const { data: insertedComment, error } = await supabase
+        .from('store_comments')
+        .insert({
+          store_id: token,
+          sender_type: 'merchant',
+          sender_name: data.store.store_name,
+          content: newComment
+        })
+        .select('id, content, sender_type, sender_name, created_at')
+        .single()
+      
+      if (!error && insertedComment) {
+        setComments([...comments, insertedComment])
+        setNewComment('')
+      }
+    } catch (err) {
+      console.error('Error submitting comment:', err)
+    }
+    setSubmittingComment(false)
+  }
 
   const handleSubmitTask = async () => {
     if (!newTask.title || !newTask.name || !newTask.contact) return
@@ -231,30 +294,75 @@ export default function PublicStorePage() {
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         {/* Manager Card */}
         <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-[#3d3555] rounded-full flex items-center justify-center">
-                {data.manager.avatar_url ? (
-                  <img 
-                    src={data.manager.avatar_url} 
-                    alt={data.manager.name || ''} 
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                ) : (
-                  <User className="h-6 w-6 text-purple-400" />
-                )}
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">مدير العلاقة</p>
-                <p className="font-semibold text-white">{data.manager.name || 'مدير العلاقة'}</p>
-              </div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-[#3d3555] rounded-full flex items-center justify-center">
+              {data.manager.avatar_url ? (
+                <img 
+                  src={data.manager.avatar_url} 
+                  alt={data.manager.name || ''} 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <User className="h-6 w-6 text-purple-400" />
+              )}
             </div>
-            {data.manager.phone && (
-              <Button onClick={openWhatsApp} className="bg-green-600 hover:bg-green-700 text-white">
-                <MessageCircle className="h-4 w-4 ml-2" />
-                واتساب
-              </Button>
+            <div>
+              <p className="text-sm text-gray-400">مدير العلاقة</p>
+              <p className="font-semibold text-white">{data.manager.name || 'مدير العلاقة'}</p>
+            </div>
+          </div>
+          
+          {/* Manager Contact Info */}
+          <div className="space-y-3 border-t border-[#3d3555] pt-4">
+            {data.manager.email && (
+              <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 text-purple-400" />
+                <a 
+                  href={`mailto:${data.manager.email}`}
+                  className="text-sm text-purple-400 hover:text-purple-300"
+                >
+                  {data.manager.email}
+                </a>
+              </div>
             )}
+            {data.manager.phone && (
+              <div className="flex items-center gap-3">
+                <Phone className="h-4 w-4 text-purple-400" />
+                <a 
+                  href={`tel:${data.manager.phone}`}
+                  className="text-sm text-purple-400 hover:text-purple-300"
+                  dir="ltr"
+                >
+                  {data.manager.phone}
+                </a>
+              </div>
+            )}
+            
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-2">
+              {data.manager.phone && (
+                <a
+                  href={`https://wa.me/${data.manager.phone.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  واتساب
+                </a>
+              )}
+              {data.manager.booking_slug && (
+                <a
+                  href={`/book/${data.manager.booking_slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors"
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  حجز اجتماع
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
@@ -383,6 +491,71 @@ export default function PublicStorePage() {
             </div>
           </div>
         )}
+
+        {/* Comments Section */}
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-[#3d3555]">
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-purple-400" />
+              الملاحظات
+            </h2>
+          </div>
+          
+          {/* Comments List */}
+          <div className="p-4 space-y-3 max-h-64 overflow-y-auto">
+            {comments.length > 0 ? (
+              comments.map((comment) => (
+                <div 
+                  key={comment.id} 
+                  className={`p-3 rounded-lg ${
+                    comment.sender_type === 'merchant' 
+                      ? 'bg-[#1a1230] mr-8' 
+                      : 'bg-purple-600/20 ml-8'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-xs font-medium ${
+                      comment.sender_type === 'merchant' ? 'text-gray-400' : 'text-purple-400'
+                    }`}>
+                      {comment.sender_type === 'merchant' ? comment.sender_name : 'مدير العلاقة'}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(comment.created_at).toLocaleDateString('ar-SA', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-sm text-white">{comment.content}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-4">لا توجد ملاحظات بعد</p>
+            )}
+          </div>
+          
+          {/* Add Comment Form */}
+          <div className="p-4 border-t border-[#3d3555]">
+            <div className="flex gap-2">
+              <input
+                className="flex-1 px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500 text-sm"
+                placeholder="اكتب ملاحظتك..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSubmitComment()}
+              />
+              <button
+                onClick={handleSubmitComment}
+                disabled={submittingComment || !newComment.trim()}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
+              >
+                {submittingComment ? '...' : 'إرسال'}
+              </button>
+            </div>
+          </div>
+        </div>
       </main>
 
       {/* Footer */}

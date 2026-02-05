@@ -14,7 +14,9 @@ import {
   Link2,
   Copy,
   Plus,
-  Loader2
+  Loader2,
+  MessageCircle,
+  Send
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -31,6 +33,18 @@ export default function ManagerStoreDetailPage() {
   const [publicToken, setPublicToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [creatingToken, setCreatingToken] = useState(false)
+  
+  // التعليقات
+  const [comments, setComments] = useState<Array<{
+    id: string
+    content: string
+    sender_type: 'merchant' | 'manager'
+    sender_name: string | null
+    created_at: string
+    is_read: boolean
+  }>>([])
+  const [newComment, setNewComment] = useState('')
+  const [submittingComment, setSubmittingComment] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -73,10 +87,30 @@ export default function ManagerStoreDetailPage() {
           .from('store_tasks')
           .select('*')
           .eq('store_id', storeId)
-          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true })
 
         if (tasksData && !tasksError) {
           setTasks(tasksData)
+        }
+        
+        // جلب التعليقات
+        const { data: commentsData } = await supabase
+          .from('store_comments')
+          .select('id, content, sender_type, sender_name, created_at, is_read')
+          .eq('store_id', storeId)
+          .order('created_at', { ascending: true })
+        
+        if (commentsData) {
+          setComments(commentsData)
+          
+          // تحديث التعليقات غير المقروءة
+          const unreadIds = commentsData.filter(c => !c.is_read && c.sender_type === 'merchant').map(c => c.id)
+          if (unreadIds.length > 0) {
+            await supabase
+              .from('store_comments')
+              .update({ is_read: true })
+              .in('id', unreadIds)
+          }
         }
 
       } catch (error) {
@@ -90,6 +124,35 @@ export default function ManagerStoreDetailPage() {
       fetchStoreData()
     }
   }, [storeId])
+  
+  // إرسال تعليق من المدير
+  const handleSubmitComment = async () => {
+    if (!newComment.trim()) return
+    
+    setSubmittingComment(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      const { data: insertedComment, error } = await supabase
+        .from('store_comments')
+        .insert({
+          store_id: storeId,
+          sender_type: 'manager',
+          manager_id: user?.id,
+          content: newComment
+        })
+        .select('id, content, sender_type, sender_name, created_at, is_read')
+        .single()
+      
+      if (!error && insertedComment) {
+        setComments([...comments, insertedComment])
+        setNewComment('')
+      }
+    } catch (err) {
+      console.error('Error submitting comment:', err)
+    }
+    setSubmittingComment(false)
+  }
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
@@ -321,7 +384,7 @@ export default function ManagerStoreDetailPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckSquare className="h-5 w-5" />
-              مهام القالب ({templateTasks.length})
+              المهام الرئيسية ({templateTasks.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -378,6 +441,79 @@ export default function ManagerStoreDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Comments Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            التعليقات ({comments.length})
+            {comments.filter(c => c.sender_type === 'merchant' && !c.is_read).length > 0 && (
+              <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                {comments.filter(c => c.sender_type === 'merchant' && !c.is_read).length} جديد
+              </span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Comments List */}
+          <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
+            {comments.length > 0 ? (
+              comments.map((comment) => (
+                <div 
+                  key={comment.id} 
+                  className={`p-3 rounded-lg ${
+                    comment.sender_type === 'merchant' 
+                      ? 'bg-orange-50 border border-orange-200 mr-8' 
+                      : 'bg-purple-50 border border-purple-200 ml-8'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-xs font-medium ${
+                      comment.sender_type === 'merchant' ? 'text-orange-600' : 'text-purple-600'
+                    }`}>
+                      {comment.sender_type === 'merchant' ? `التاجر: ${comment.sender_name}` : 'أنت'}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(comment.created_at).toLocaleDateString('ar-SA', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-sm">{comment.content}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-4">لا توجد تعليقات بعد</p>
+            )}
+          </div>
+          
+          {/* Add Comment Form */}
+          <div className="flex gap-2">
+            <input
+              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="اكتب ردك للتاجر..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSubmitComment()}
+            />
+            <Button
+              onClick={handleSubmitComment}
+              disabled={submittingComment || !newComment.trim()}
+              size="sm"
+            >
+              {submittingComment ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

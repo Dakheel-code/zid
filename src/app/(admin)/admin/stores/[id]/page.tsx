@@ -73,6 +73,19 @@ export default function StoreDetailsPage() {
   const LOGS_PER_PAGE = 10
   const [tasksExpanded, setTasksExpanded] = useState(false)
   const [meetingsExpanded, setMeetingsExpanded] = useState(false)
+  const [commentsExpanded, setCommentsExpanded] = useState(true)
+  
+  // التعليقات
+  const [comments, setComments] = useState<Array<{
+    id: string
+    content: string
+    sender_type: 'merchant' | 'manager'
+    sender_name: string | null
+    created_at: string
+    is_read: boolean
+  }>>([])
+  const [newComment, setNewComment] = useState('')
+  const [submittingComment, setSubmittingComment] = useState(false)
 
   // حالة نموذج التعديل
   const [editForm, setEditForm] = useState({
@@ -194,11 +207,65 @@ export default function StoreDetailsPage() {
       }
     }
     
+    // جلب التعليقات
+    async function fetchComments() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('store_comments')
+        .select('id, content, sender_type, sender_name, created_at, is_read')
+        .eq('store_id', storeId)
+        .order('created_at', { ascending: true })
+      
+      if (data) {
+        setComments(data)
+        
+        // تحديث التعليقات غير المقروءة
+        const unreadIds = data.filter(c => !c.is_read && c.sender_type === 'merchant').map(c => c.id)
+        if (unreadIds.length > 0) {
+          await supabase
+            .from('store_comments')
+            .update({ is_read: true })
+            .in('id', unreadIds)
+        }
+      }
+    }
+    
     fetchStore()
     fetchManagers()
     fetchMeetings()
     fetchActivityLog(1)
+    fetchComments()
   }, [storeId])
+  
+  // إرسال تعليق من المدير/الإدارة
+  const handleSubmitComment = async () => {
+    if (!newComment.trim()) return
+    
+    setSubmittingComment(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      const { data: insertedComment, error } = await supabase
+        .from('store_comments')
+        .insert({
+          store_id: storeId,
+          sender_type: 'manager',
+          manager_id: user?.id,
+          content: newComment
+        })
+        .select('id, content, sender_type, sender_name, created_at, is_read')
+        .single()
+      
+      if (!error && insertedComment) {
+        setComments([...comments, insertedComment])
+        setNewComment('')
+      }
+    } catch (err) {
+      console.error('Error submitting comment:', err)
+    }
+    setSubmittingComment(false)
+  }
   
   // دالة لتحديث صفحة سجل التعديلات
   const loadActivityLogPage = async (page: number) => {
@@ -739,13 +806,90 @@ export default function StoreDetailsPage() {
         </div>
       </div>
 
-      {/* Notes */}
-      <div className="bg-[#3d2d5a] border border-[#5a4985]/40 rounded-xl p-5">
-        <h3 className="text-[16px] font-bold text-white mb-3 flex items-center gap-2">
-          <FileText className="h-4 w-4 text-[#a855f7]" />
-          ملاحظات
-        </h3>
-        <p className="text-[14px] text-[#c4b5fd]">{store.notes}</p>
+      {/* Comments Section - Collapsible */}
+      <div className="bg-[#3d2d5a] border border-[#5a4985]/40 rounded-xl overflow-hidden">
+        {/* Header - Clickable to toggle */}
+        <button
+          onClick={() => setCommentsExpanded(!commentsExpanded)}
+          className="w-full flex items-center justify-between p-5 hover:bg-[#4a3a6a] transition-colors"
+        >
+          <h3 className="text-[16px] font-bold text-white flex items-center gap-2">
+            <FileText className="h-4 w-4 text-[#a855f7]" />
+            التعليقات ({comments.length})
+            {comments.filter(c => c.sender_type === 'merchant' && !c.is_read).length > 0 && (
+              <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full mr-2">
+                {comments.filter(c => c.sender_type === 'merchant' && !c.is_read).length} جديد
+              </span>
+            )}
+          </h3>
+          {commentsExpanded ? (
+            <ChevronUp className="h-5 w-5 text-[#8b7fad]" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-[#8b7fad]" />
+          )}
+        </button>
+        
+        {/* Content - Collapsible */}
+        {commentsExpanded && (
+          <div className="px-5 pb-5">
+            {/* Comments List */}
+            <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
+              {comments.length > 0 ? (
+                comments.map((comment) => (
+                  <div 
+                    key={comment.id} 
+                    className={`p-3 rounded-lg ${
+                      comment.sender_type === 'merchant' 
+                        ? 'bg-orange-500/10 border border-orange-500/30 mr-8' 
+                        : 'bg-purple-500/10 border border-purple-500/30 ml-8'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-xs font-medium ${
+                        comment.sender_type === 'merchant' ? 'text-orange-400' : 'text-purple-400'
+                      }`}>
+                        {comment.sender_type === 'merchant' ? `التاجر: ${comment.sender_name}` : 'أنت'}
+                      </span>
+                      <span className="text-xs text-[#8b7fad]">
+                        {new Date(comment.created_at).toLocaleDateString('ar-SA', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-sm text-white">{comment.content}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-[#8b7fad] py-4">لا توجد تعليقات بعد</p>
+              )}
+            </div>
+            
+            {/* Add Comment Form */}
+            <div className="flex gap-2">
+              <input
+                className="flex-1 px-3 py-2 bg-[#2d1f4e] border border-[#5a4985]/40 rounded-lg text-white text-sm placeholder:text-[#8b7fad] focus:outline-none focus:border-[#a855f7]"
+                placeholder="اكتب ردك للتاجر..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSubmitComment()}
+              />
+              <button
+                onClick={handleSubmitComment}
+                disabled={submittingComment || !newComment.trim()}
+                className="px-4 py-2 bg-[#a855f7] hover:bg-[#9333ea] disabled:bg-[#5a4985] disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
+              >
+                {submittingComment ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'إرسال'
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Meetings Section - Collapsible */}
