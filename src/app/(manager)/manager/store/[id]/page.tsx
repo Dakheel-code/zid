@@ -306,45 +306,29 @@ export default function ManagerStoreDetailPage() {
               <Link2 className="h-4 w-4 text-muted-foreground" />
               <span className="font-medium">رابط صفحة التاجر</span>
             </div>
-            {publicToken ? (
-              <div className="flex items-center justify-between gap-2 bg-background p-2 rounded-lg">
-                <code className="text-sm text-primary truncate flex-1">
-                  {typeof window !== 'undefined' ? window.location.origin : ''}/public/store/{publicToken}
-                </code>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" onClick={copyPublicLink}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <a 
-                    href={`/public/store/${publicToken}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button variant="ghost" size="sm">
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </a>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">لم يتم إنشاء رابط عام بعد</span>
-                <Button 
-                  onClick={createPublicToken} 
-                  disabled={creatingToken}
-                  size="sm"
-                >
-                  {creatingToken ? (
-                    <Loader2 className="h-4 w-4 ml-2 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4 ml-2" />
-                  )}
-                  إنشاء رابط
+            <div className="flex items-center justify-between gap-2 bg-background p-2 rounded-lg">
+              <code className="text-sm text-primary truncate flex-1">
+                {typeof window !== 'undefined' ? window.location.origin : ''}/public/store/{storeId}
+              </code>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/public/store/${storeId}`)
+                }}>
+                  <Copy className="h-4 w-4" />
                 </Button>
+                <a 
+                  href={`/public/store/${storeId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="ghost" size="sm">
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                </a>
               </div>
-            )}
+            </div>
           </div>
-        </CardContent>
+          </CardContent>
       </Card>
 
       {/* Stats */}
