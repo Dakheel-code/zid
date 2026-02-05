@@ -263,7 +263,7 @@ export default function ManagerStoreDetailPage() {
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
                 >
-                  {store.store_url}
+                  {store.store_url?.replace(/^https?:\/\//, '')}
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
