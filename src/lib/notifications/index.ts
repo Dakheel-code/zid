@@ -39,13 +39,14 @@ export function formatNotificationTime(date: string): string {
 
 export function getNotificationIcon(type: Notification['type']): string {
   switch (type) {
-    case 'success':
-      return '✓'
-    case 'warning':
-      return '⚠'
-    case 'error':
-      return '✕'
-    case 'info':
+    case 'task':
+      return '📋'
+    case 'store':
+      return '🏪'
+    case 'announcement':
+      return '📢'
+    case 'meeting':
+      return '📅'
     default:
       return 'ℹ'
   }
@@ -53,14 +54,15 @@ export function getNotificationIcon(type: Notification['type']): string {
 
 export function getNotificationColor(type: Notification['type']): string {
   switch (type) {
-    case 'success':
-      return 'text-green-600 bg-green-100'
-    case 'warning':
-      return 'text-yellow-600 bg-yellow-100'
-    case 'error':
-      return 'text-red-600 bg-red-100'
-    case 'info':
-    default:
+    case 'task':
       return 'text-blue-600 bg-blue-100'
+    case 'store':
+      return 'text-green-600 bg-green-100'
+    case 'announcement':
+      return 'text-purple-600 bg-purple-100'
+    case 'meeting':
+      return 'text-orange-600 bg-orange-100'
+    default:
+      return 'text-gray-600 bg-gray-100'
   }
 }
