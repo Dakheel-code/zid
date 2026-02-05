@@ -476,7 +476,7 @@ export default function ManagerStoreDetailPage() {
           {/* Add Comment Form */}
           <div className="flex gap-2">
             <input
-              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-black bg-white"
               placeholder="اكتب ردك للتاجر..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
