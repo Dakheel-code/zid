@@ -85,7 +85,7 @@ export function NotificationBell() {
       }
 
       const { data, error } = await supabase
-        .from('notifications')
+        .from('notifications_v2')
         .select('*')
         .eq('recipient_user_id', user.id)
         .order('created_at', { ascending: false })
@@ -139,7 +139,7 @@ export function NotificationBell() {
         const { createClient } = await import('@/lib/supabase/client')
         const supabase = createClient()
         await supabase
-          .from('notifications')
+          .from('notifications_v2')
           .update({ is_read: true })
           .eq('id', notification.id)
       } catch (error) {
@@ -162,7 +162,7 @@ export function NotificationBell() {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
           await supabase
-            .from('notifications')
+            .from('notifications_v2')
             .update({ is_read: true })
             .eq('recipient_user_id', user.id)
             .eq('is_read', false)
