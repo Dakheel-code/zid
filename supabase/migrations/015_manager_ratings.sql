@@ -34,18 +34,21 @@ CREATE INDEX IF NOT EXISTS idx_manager_ratings_store_id ON manager_ratings(store
 -- تفعيل RLS
 ALTER TABLE manager_ratings ENABLE ROW LEVEL SECURITY;
 
--- سياسات الوصول
-DROP POLICY IF EXISTS "allow_public_read_ratings" ON manager_ratings;
-CREATE POLICY "allow_public_read_ratings" ON manager_ratings
-    FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "allow_public_insert_ratings" ON manager_ratings;
-CREATE POLICY "allow_public_insert_ratings" ON manager_ratings
-    FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "allow_public_update_ratings" ON manager_ratings;
-CREATE POLICY "allow_public_update_ratings" ON manager_ratings
-    FOR UPDATE USING (true);
+-- سياسات الوصول (مع التحقق من عدم وجودها)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'manager_ratings' AND policyname = 'allow_public_read_ratings') THEN
+        CREATE POLICY "allow_public_read_ratings" ON manager_ratings FOR SELECT USING (true);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'manager_ratings' AND policyname = 'allow_public_insert_ratings') THEN
+        CREATE POLICY "allow_public_insert_ratings" ON manager_ratings FOR INSERT WITH CHECK (true);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'manager_ratings' AND policyname = 'allow_public_update_ratings') THEN
+        CREATE POLICY "allow_public_update_ratings" ON manager_ratings FOR UPDATE USING (true);
+    END IF;
+END $$;
 
 -- Trigger لتحديث updated_at
 CREATE OR REPLACE FUNCTION update_manager_ratings_updated_at()
