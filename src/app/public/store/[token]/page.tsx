@@ -267,14 +267,14 @@ export default function PublicStorePage() {
   const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
   return (
-    <div className="min-h-screen bg-[#1a1230]" dir="rtl">
-      {/* Header */}
-      <header className="bg-[#1a1230] border-b border-[#3d3555] sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 py-4">
-          <div className="flex flex-col items-center gap-3">
-            <h1 className="font-bold text-lg text-white">متابعة المهام</h1>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#3d3555] rounded-lg flex items-center justify-center">
+    <div className="min-h-screen bg-[#1a1230] pb-safe" dir="rtl">
+      {/* Header - Mobile Optimized */}
+      <header className="bg-[#1a1230] border-b border-[#3d3555] sticky top-0 z-10 safe-top">
+        <div className="max-w-lg mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex flex-col items-center gap-2 sm:gap-3">
+            <h1 className="font-bold text-base sm:text-lg text-white">متابعة المهام</h1>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#3d3555] rounded-lg flex items-center justify-center flex-shrink-0">
                 {data.store.store_logo_url ? (
                   <img 
                     src={data.store.store_logo_url} 
@@ -282,20 +282,20 @@ export default function PublicStorePage() {
                     className="w-full h-full object-cover rounded-lg"
                   />
                 ) : (
-                  <Store className="h-5 w-5 text-purple-400" />
+                  <Store className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
                 )}
               </div>
-              <span className="text-white font-medium">{data.store.store_name || 'متجرك'}</span>
+              <span className="text-white font-medium text-sm sm:text-base truncate max-w-[200px]">{data.store.store_name || 'متجرك'}</span>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-        {/* Manager Card */}
-        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl p-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-[#3d3555] rounded-full flex items-center justify-center">
+      <main className="max-w-lg mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-3 sm:space-y-4">
+        {/* Manager Card - Mobile Optimized */}
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-xl sm:rounded-2xl p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3d3555] rounded-full flex items-center justify-center flex-shrink-0">
               {data.manager.avatar_url ? (
                 <img 
                   src={data.manager.avatar_url} 
@@ -303,34 +303,34 @@ export default function PublicStorePage() {
                   className="w-full h-full object-cover rounded-full"
                 />
               ) : (
-                <User className="h-6 w-6 text-purple-400" />
+                <User className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400" />
               )}
             </div>
-            <div>
-              <p className="text-sm text-gray-400">مدير العلاقة</p>
-              <p className="font-semibold text-white">{data.manager.name || 'مدير العلاقة'}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm text-gray-400">مدير العلاقة</p>
+              <p className="font-semibold text-white text-sm sm:text-base truncate">{data.manager.name || 'مدير العلاقة'}</p>
             </div>
           </div>
           
           {/* Manager Contact Info */}
-          <div className="space-y-3 border-t border-[#3d3555] pt-4">
+          <div className="space-y-2 sm:space-y-3 border-t border-[#3d3555] pt-3 sm:pt-4">
             {data.manager.email && (
-              <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-purple-400" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-400 flex-shrink-0" />
                 <a 
                   href={`mailto:${data.manager.email}`}
-                  className="text-sm text-purple-400 hover:text-purple-300"
+                  className="text-xs sm:text-sm text-purple-400 hover:text-purple-300 truncate"
                 >
                   {data.manager.email}
                 </a>
               </div>
             )}
             {data.manager.phone && (
-              <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-purple-400" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-400 flex-shrink-0" />
                 <a 
                   href={`tel:${data.manager.phone}`}
-                  className="text-sm text-purple-400 hover:text-purple-300"
+                  className="text-xs sm:text-sm text-purple-400 hover:text-purple-300"
                   dir="ltr"
                 >
                   {data.manager.phone}
@@ -338,16 +338,16 @@ export default function PublicStorePage() {
               </div>
             )}
             
-            {/* Action Buttons */}
+            {/* Action Buttons - Mobile Optimized */}
             <div className="flex gap-2 pt-2">
               {data.manager.phone && (
                 <a
                   href={`https://wa.me/${data.manager.phone.replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white text-xs sm:text-sm rounded-lg transition-colors touch-manipulation"
                 >
-                  <MessageCircle className="h-3.5 w-3.5" />
+                  <MessageCircle className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                   واتساب
                 </a>
               )}
@@ -356,9 +356,9 @@ export default function PublicStorePage() {
                   href={`/book/${data.manager.booking_slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white text-xs sm:text-sm rounded-lg transition-colors touch-manipulation"
                 >
-                  <Calendar className="h-3.5 w-3.5" />
+                  <Calendar className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                   حجز اجتماع
                 </a>
               )}
@@ -366,47 +366,47 @@ export default function PublicStorePage() {
           </div>
         </div>
 
-        {/* Progress Card */}
-        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-medium text-white">تقدم المهام</span>
-            <span className="text-sm text-gray-400">
+        {/* Progress Card - Mobile Optimized */}
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-xl sm:rounded-2xl p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <span className="font-medium text-white text-sm sm:text-base">تقدم المهام</span>
+            <span className="text-xs sm:text-sm text-gray-400">
               {completedTasks} من {totalTasks} مهمة
             </span>
           </div>
-          <div className="w-full bg-[#1a1230] rounded-full h-3">
+          <div className="w-full bg-[#1a1230] rounded-full h-2.5 sm:h-3">
             <div 
-              className="bg-gradient-to-r from-purple-600 to-purple-400 h-3 rounded-full transition-all"
+              className="bg-gradient-to-r from-purple-600 to-purple-400 h-2.5 sm:h-3 rounded-full transition-all"
               style={{ width: `${progressPercent}%` }}
             ></div>
           </div>
-          <p className="text-center text-sm text-gray-400 mt-2">
+          <p className="text-center text-xs sm:text-sm text-gray-400 mt-2">
             {progressPercent}% مكتمل
           </p>
         </div>
 
-        {/* Tasks List */}
-        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl overflow-hidden">
-          <div className="p-4 border-b border-[#3d3555]">
-            <h2 className="text-lg font-bold text-white">المهام</h2>
+        {/* Tasks List - Mobile Optimized */}
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-xl sm:rounded-2xl overflow-hidden">
+          <div className="p-3 sm:p-4 border-b border-[#3d3555]">
+            <h2 className="text-base sm:text-lg font-bold text-white">المهام</h2>
           </div>
           <div className="divide-y divide-[#3d3555]">
             {data.tasks.map((task) => (
-              <div key={task.id} className="p-4 flex items-center gap-3">
+              <div key={task.id} className="p-3 sm:p-4 flex items-start sm:items-center gap-2 sm:gap-3">
                 {task.status === 'done' ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0 mt-0.5 sm:mt-0" />
                 ) : (
-                  <Clock className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 flex-shrink-0 mt-0.5 sm:mt-0" />
                 )}
-                <div className="flex-1">
-                  <p className={task.status === 'done' ? 'line-through text-gray-500' : 'text-white'}>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm sm:text-base ${task.status === 'done' ? 'line-through text-gray-500' : 'text-white'}`}>
                     {task.title}
                   </p>
                   {task.section_title && (
                     <p className="text-xs text-gray-500">{task.section_title}</p>
                   )}
                 </div>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                <span className={`text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full font-medium whitespace-nowrap ${
                   task.status === 'done' 
                     ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
                     : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
@@ -418,54 +418,54 @@ export default function PublicStorePage() {
           </div>
         </div>
 
-        {/* New Task Form */}
+        {/* New Task Form - Mobile Optimized */}
         {!showTaskForm ? (
           <button 
             onClick={() => setShowTaskForm(true)} 
-            className="w-full py-3 border-2 border-dashed border-[#3d3555] rounded-2xl text-gray-400 hover:border-purple-500 hover:text-purple-400 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 border-2 border-dashed border-[#3d3555] rounded-xl sm:rounded-2xl text-gray-400 hover:border-purple-500 hover:text-purple-400 active:bg-[#2d2640] transition-colors flex items-center justify-center gap-2 text-sm sm:text-base touch-manipulation"
           >
             <Plus className="h-4 w-4" />
             إرسال طلب جديد
           </button>
         ) : (
-          <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl overflow-hidden">
-            <div className="p-4 border-b border-[#3d3555]">
-              <h2 className="text-lg font-bold text-white">طلب جديد</h2>
+          <div className="bg-[#2d2640] border border-[#3d3555] rounded-xl sm:rounded-2xl overflow-hidden">
+            <div className="p-3 sm:p-4 border-b border-[#3d3555]">
+              <h2 className="text-base sm:text-lg font-bold text-white">طلب جديد</h2>
             </div>
-            <div className="p-4 space-y-4">
+            <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block text-gray-300">عنوان الطلب *</label>
+                <label className="text-xs sm:text-sm font-medium mb-1 block text-gray-300">عنوان الطلب *</label>
                 <input
-                  className="w-full px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
+                  className="w-full px-3 py-2.5 sm:py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
                   placeholder="مثال: تحسين صور المنتجات"
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block text-gray-300">التفاصيل</label>
+                <label className="text-xs sm:text-sm font-medium mb-1 block text-gray-300">التفاصيل</label>
                 <textarea
-                  className="w-full px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500 resize-none"
+                  className="w-full px-3 py-2.5 sm:py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-purple-500 resize-none"
                   rows={3}
                   placeholder="اكتب تفاصيل طلبك..."
                   value={newTask.description}
                   onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-1 block text-gray-300">اسمك *</label>
+                  <label className="text-xs sm:text-sm font-medium mb-1 block text-gray-300">اسمك *</label>
                   <input
-                    className="w-full px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
+                    className="w-full px-3 py-2.5 sm:py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
                     placeholder="الاسم"
                     value={newTask.name}
                     onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block text-gray-300">رقم التواصل *</label>
+                  <label className="text-xs sm:text-sm font-medium mb-1 block text-gray-300">رقم التواصل *</label>
                   <input
-                    className="w-full px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
+                    className="w-full px-3 py-2.5 sm:py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
                     placeholder="رقم الجوال أو البريد"
                     value={newTask.contact}
                     onChange={(e) => setNewTask({ ...newTask, contact: e.target.value })}
@@ -476,14 +476,14 @@ export default function PublicStorePage() {
                 <Button 
                   onClick={handleSubmitTask} 
                   disabled={submitting || !newTask.title || !newTask.name || !newTask.contact}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-sm sm:text-base py-2.5 sm:py-2 touch-manipulation"
                 >
                   {submitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
                 </Button>
                 <Button 
                   variant="secondary" 
                   onClick={() => setShowTaskForm(false)}
-                  className="bg-[#3d3555] hover:bg-[#4d4565] text-white border-0"
+                  className="bg-[#3d3555] hover:bg-[#4d4565] active:bg-[#5d5575] text-white border-0 text-sm sm:text-base py-2.5 sm:py-2 touch-manipulation"
                 >
                   إلغاء
                 </Button>
@@ -492,34 +492,34 @@ export default function PublicStorePage() {
           </div>
         )}
 
-        {/* Comments Section */}
-        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl overflow-hidden">
-          <div className="p-4 border-b border-[#3d3555]">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-purple-400" />
+        {/* Comments Section - Mobile Optimized */}
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-xl sm:rounded-2xl overflow-hidden">
+          <div className="p-3 sm:p-4 border-b border-[#3d3555]">
+            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
               الملاحظات
             </h2>
           </div>
           
           {/* Comments List */}
-          <div className="p-4 space-y-3 max-h-64 overflow-y-auto">
+          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-48 sm:max-h-64 overflow-y-auto">
             {comments.length > 0 ? (
               comments.map((comment) => (
                 <div 
                   key={comment.id} 
-                  className={`p-3 rounded-lg ${
+                  className={`p-2.5 sm:p-3 rounded-lg ${
                     comment.sender_type === 'merchant' 
-                      ? 'bg-[#1a1230] mr-8' 
-                      : 'bg-purple-600/20 ml-8'
+                      ? 'bg-[#1a1230] mr-4 sm:mr-8' 
+                      : 'bg-purple-600/20 ml-4 sm:ml-8'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs font-medium ${
+                    <span className={`text-[10px] sm:text-xs font-medium ${
                       comment.sender_type === 'merchant' ? 'text-gray-400' : 'text-purple-400'
                     }`}>
                       {comment.sender_type === 'merchant' ? comment.sender_name : 'مدير العلاقة'}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-[10px] sm:text-xs text-gray-500">
                       {new Date(comment.created_at).toLocaleDateString('ar-SA', { 
                         month: 'short', 
                         day: 'numeric',
@@ -528,19 +528,19 @@ export default function PublicStorePage() {
                       })}
                     </span>
                   </div>
-                  <p className="text-sm text-white">{comment.content}</p>
+                  <p className="text-xs sm:text-sm text-white">{comment.content}</p>
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-500 py-4">لا توجد ملاحظات بعد</p>
+              <p className="text-center text-gray-500 py-4 text-sm">لا توجد ملاحظات بعد</p>
             )}
           </div>
           
           {/* Add Comment Form */}
-          <div className="p-4 border-t border-[#3d3555]">
+          <div className="p-3 sm:p-4 border-t border-[#3d3555]">
             <div className="flex gap-2">
               <input
-                className="flex-1 px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500 text-sm"
+                className="flex-1 px-3 py-2.5 sm:py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500 text-sm"
                 placeholder="اكتب ملاحظتك..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
@@ -549,7 +549,7 @@ export default function PublicStorePage() {
               <button
                 onClick={handleSubmitComment}
                 disabled={submittingComment || !newComment.trim()}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
+                className="px-3 sm:px-4 py-2.5 sm:py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors touch-manipulation"
               >
                 {submittingComment ? '...' : 'إرسال'}
               </button>
@@ -558,8 +558,8 @@ export default function PublicStorePage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="text-center py-6 text-sm text-gray-500">
+      {/* Footer - Mobile Optimized */}
+      <footer className="text-center py-4 sm:py-6 text-xs sm:text-sm text-gray-500 pb-safe">
         <p>نظام إدارة المتاجر - ZID Dashboard</p>
       </footer>
     </div>
