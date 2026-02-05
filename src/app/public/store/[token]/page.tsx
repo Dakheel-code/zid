@@ -12,7 +12,12 @@ import {
   AlertTriangle,
   Phone,
   Mail,
-  Calendar
+  Calendar,
+  Paperclip,
+  Image as ImageIcon,
+  X,
+  Send,
+  Loader2
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -62,10 +67,15 @@ export default function PublicStorePage() {
     content: string
     sender_type: 'merchant' | 'manager'
     sender_name: string | null
+    attachment_url: string | null
+    attachment_type: string | null
     created_at: string
   }>>([])
   const [newComment, setNewComment] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
+  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null)
+  const [uploadingAttachment, setUploadingAttachment] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -152,7 +162,7 @@ export default function PublicStorePage() {
         // جلب التعليقات
         const { data: commentsData } = await supabase
           .from('store_comments')
-          .select('id, content, sender_type, sender_name, created_at')
+          .select('id, content, sender_type, sender_name, attachment_url, attachment_type, created_at')
           .eq('store_id', storeId)
           .order('created_at', { ascending: true })
         
@@ -161,6 +171,33 @@ export default function PublicStorePage() {
         }
         
         setLoading(false)
+        
+        // الاشتراك في التحديثات الفورية للتعليقات
+        const commentsChannel = supabase
+          .channel('store_comments_' + storeId)
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'store_comments',
+            filter: `store_id=eq.${storeId}`
+          }, (payload) => {
+            const newComment = payload.new as any
+            setComments(prev => [...prev, {
+              id: newComment.id,
+              content: newComment.content,
+              sender_type: newComment.sender_type,
+              sender_name: newComment.sender_name,
+              attachment_url: newComment.attachment_url,
+              attachment_type: newComment.attachment_type,
+              created_at: newComment.created_at
+            }])
+          })
+          .subscribe()
+        
+        // تنظيف الاشتراك عند مغادرة الصفحة
+        return () => {
+          supabase.removeChannel(commentsChannel)
+        }
       } catch (err) {
         console.error('Error fetching store data:', err)
         setError('حدث خطأ في تحميل البيانات')
@@ -173,26 +210,76 @@ export default function PublicStorePage() {
     }
   }, [token])
   
+  // رفع المرفق
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // التحقق من حجم الملف (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('حجم الملف كبير جداً. الحد الأقصى 5 ميجابايت')
+        return
+      }
+      setAttachmentFile(file)
+      // معاينة الصورة
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader()
+        reader.onload = (e) => setAttachmentPreview(e.target?.result as string)
+        reader.readAsDataURL(file)
+      } else {
+        setAttachmentPreview(null)
+      }
+    }
+  }
+
+  const removeAttachment = () => {
+    setAttachmentFile(null)
+    setAttachmentPreview(null)
+  }
+
   // إرسال تعليق جديد
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || !data?.store.store_name) return
+    if ((!newComment.trim() && !attachmentFile) || !data?.store.store_name) return
     
     setSubmittingComment(true)
     try {
-      const { data: insertedComment, error } = await supabase
+      let attachmentUrl = null
+      let attachmentType = null
+
+      // رفع المرفق إذا وجد
+      if (attachmentFile) {
+        setUploadingAttachment(true)
+        const fileExt = attachmentFile.name.split('.').pop()
+        const fileName = `${token}/${Date.now()}.${fileExt}`
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('comment-attachments')
+          .upload(fileName, attachmentFile)
+        
+        if (!uploadError && uploadData) {
+          const { data: urlData } = supabase.storage
+            .from('comment-attachments')
+            .getPublicUrl(fileName)
+          attachmentUrl = urlData.publicUrl
+          attachmentType = attachmentFile.type.startsWith('image/') ? 'image' : 'file'
+        }
+        setUploadingAttachment(false)
+      }
+
+      const { error } = await supabase
         .from('store_comments')
         .insert({
           store_id: token,
           sender_type: 'merchant',
           sender_name: data.store.store_name,
-          content: newComment
+          content: newComment || (attachmentFile ? 'مرفق' : ''),
+          attachment_url: attachmentUrl,
+          attachment_type: attachmentType
         })
-        .select('id, content, sender_type, sender_name, created_at')
-        .single()
       
-      if (!error && insertedComment) {
-        setComments([...comments, insertedComment])
+      if (!error) {
         setNewComment('')
+        setAttachmentFile(null)
+        setAttachmentPreview(null)
       }
     } catch (err) {
       console.error('Error submitting comment:', err)
@@ -271,21 +358,22 @@ export default function PublicStorePage() {
       {/* Header - Mobile Optimized */}
       <header className="bg-[#1a1230] border-b border-[#3d3555] sticky top-0 z-10 safe-top">
         <div className="max-w-lg mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex flex-col items-center gap-2 sm:gap-3">
-            <h1 className="font-bold text-base sm:text-lg text-white">متابعة المهام</h1>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#3d3555] rounded-lg flex items-center justify-center flex-shrink-0">
-                {data.store.store_logo_url ? (
-                  <img 
-                    src={data.store.store_logo_url} 
-                    alt={data.store.store_name || ''} 
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                ) : (
-                  <Store className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
-                )}
-              </div>
-              <span className="text-white font-medium text-sm sm:text-base truncate max-w-[200px]">{data.store.store_name || 'متجرك'}</span>
+          <div className="flex flex-col items-center gap-3 sm:gap-4">
+            {/* شعار المتجر الكبير */}
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#3d3555] rounded-2xl flex items-center justify-center overflow-hidden border-2 border-purple-500/30">
+              {data.store.store_logo_url ? (
+                <img 
+                  src={data.store.store_logo_url} 
+                  alt={data.store.store_name || ''} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Store className="h-8 w-8 sm:h-10 sm:w-10 text-purple-400" />
+              )}
+            </div>
+            <div className="text-center">
+              <h1 className="font-bold text-lg sm:text-xl text-white">{data.store.store_name || 'متجرك'}</h1>
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">متابعة المهام</p>
             </div>
           </div>
         </div>
@@ -526,7 +614,33 @@ export default function PublicStorePage() {
                       })}
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-white">{comment.content}</p>
+                  {/* عرض المرفق إذا وجد */}
+                  {comment.attachment_url && (
+                    <div className="mb-2">
+                      {comment.attachment_type === 'image' ? (
+                        <a href={comment.attachment_url} target="_blank" rel="noopener noreferrer">
+                          <img 
+                            src={comment.attachment_url} 
+                            alt="مرفق" 
+                            className="max-w-full rounded-lg max-h-40 object-cover cursor-pointer hover:opacity-90"
+                          />
+                        </a>
+                      ) : (
+                        <a 
+                          href={comment.attachment_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 bg-white/10 rounded-lg p-2 hover:bg-white/20 transition-colors"
+                        >
+                          <Paperclip className="h-4 w-4 text-white/70" />
+                          <span className="text-xs text-white/70">تحميل المرفق</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
+                  {comment.content && comment.content !== 'مرفق' && (
+                    <p className="text-xs sm:text-sm text-white">{comment.content}</p>
+                  )}
                 </div>
               ))
             ) : (
@@ -536,7 +650,36 @@ export default function PublicStorePage() {
           
           {/* Add Comment Form */}
           <div className="p-3 sm:p-4 border-t border-[#3d3555]">
-            <div className="flex gap-2">
+            {/* معاينة المرفق */}
+            {attachmentFile && (
+              <div className="mb-3 relative inline-block">
+                {attachmentPreview ? (
+                  <img src={attachmentPreview} alt="معاينة" className="h-20 rounded-lg object-cover" />
+                ) : (
+                  <div className="flex items-center gap-2 bg-purple-600/20 rounded-lg px-3 py-2">
+                    <Paperclip className="h-4 w-4 text-purple-400" />
+                    <span className="text-xs text-purple-400 truncate max-w-[150px]">{attachmentFile.name}</span>
+                  </div>
+                )}
+                <button
+                  onClick={removeAttachment}
+                  className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 hover:bg-red-600"
+                >
+                  <X className="h-3 w-3 text-white" />
+                </button>
+              </div>
+            )}
+            <div className="flex gap-2 items-center">
+              {/* زر إرفاق ملف */}
+              <label className="cursor-pointer p-2.5 sm:p-2 bg-[#3d3555] hover:bg-[#4d4565] rounded-lg transition-colors touch-manipulation">
+                <input
+                  type="file"
+                  accept="image/*,.pdf,.doc,.docx"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <Paperclip className="h-5 w-5 text-purple-400" />
+              </label>
               <input
                 className="flex-1 px-3 py-2.5 sm:py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500 text-sm"
                 placeholder="اكتب تعليقك..."
@@ -546,10 +689,14 @@ export default function PublicStorePage() {
               />
               <button
                 onClick={handleSubmitComment}
-                disabled={submittingComment || !newComment.trim()}
-                className="px-3 sm:px-4 py-2.5 sm:py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors touch-manipulation"
+                disabled={submittingComment || uploadingAttachment || (!newComment.trim() && !attachmentFile)}
+                className="px-3 sm:px-4 py-2.5 sm:py-2 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors touch-manipulation flex items-center gap-1"
               >
-                {submittingComment ? '...' : 'إرسال'}
+                {submittingComment || uploadingAttachment ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>

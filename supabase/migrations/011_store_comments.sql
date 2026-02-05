@@ -16,6 +16,10 @@ CREATE TABLE IF NOT EXISTS store_comments (
   -- محتوى التعليق
   content TEXT NOT NULL,
   
+  -- المرفقات
+  attachment_url TEXT, -- رابط المرفق
+  attachment_type TEXT CHECK (attachment_type IN ('image', 'file', NULL)), -- نوع المرفق
+  
   -- حالة التعليق
   is_read BOOLEAN DEFAULT FALSE,
   
