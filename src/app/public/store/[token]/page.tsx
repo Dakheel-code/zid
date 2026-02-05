@@ -1,0 +1,358 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { 
+  Store, 
+  CheckCircle2, 
+  Clock,
+  User,
+  MessageCircle,
+  Plus,
+  AlertTriangle,
+  Phone,
+  Mail
+} from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
+interface PublicStoreData {
+  store: {
+    id: string
+    store_name: string | null
+    store_logo_url: string | null
+    store_url: string
+  }
+  manager: {
+    id: string
+    name: string | null
+    phone: string | null
+    avatar_url: string | null
+  }
+  tasks: Array<{
+    id: string
+    title: string
+    description: string | null
+    status: 'pending' | 'done'
+    section_title: string | null
+  }>
+  is_expired: boolean
+  expires_at: string | null
+}
+
+export default function PublicStorePage() {
+  const params = useParams()
+  const token = params.token as string
+  
+  const [data, setData] = useState<PublicStoreData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showTaskForm, setShowTaskForm] = useState(false)
+  const [newTask, setNewTask] = useState({ title: '', description: '', name: '', contact: '' })
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // TODO: Fetch from API
+        // const response = await fetch(`/api/public/store/${token}`)
+        // const result = await response.json()
+        
+        // Mock data for testing
+        const mockData: PublicStoreData = {
+          store: {
+            id: '1',
+            store_name: 'متجر الإلكترونيات',
+            store_logo_url: null,
+            store_url: 'https://example.zid.store'
+          },
+          manager: {
+            id: '1',
+            name: 'محمد علي',
+            phone: '+966501234567',
+            avatar_url: null
+          },
+          tasks: [
+            { id: '1', title: 'مراجعة إعدادات المتجر', description: null, status: 'done', section_title: 'إعداد المتجر' },
+            { id: '2', title: 'إضافة طرق الدفع', description: null, status: 'pending', section_title: 'إعداد المتجر' },
+            { id: '3', title: 'إعداد الشحن', description: null, status: 'pending', section_title: 'إعداد المتجر' },
+            { id: '4', title: 'مراجعة المنتجات', description: null, status: 'done', section_title: 'المنتجات' }
+          ],
+          is_expired: false,
+          expires_at: null
+        }
+        
+        setData(mockData)
+        setLoading(false)
+      } catch (err) {
+        setError('حدث خطأ في تحميل البيانات')
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [token])
+
+  const handleSubmitTask = async () => {
+    if (!newTask.title || !newTask.name || !newTask.contact) return
+    
+    setSubmitting(true)
+    try {
+      // TODO: Submit to API
+      // await fetch(`/api/public/store/${token}/tasks`, {
+      //   method: 'POST',
+      //   body: JSON.stringify(newTask)
+      // })
+      
+      alert('تم إرسال طلبك بنجاح! سيتواصل معك مدير العلاقة قريباً.')
+      setShowTaskForm(false)
+      setNewTask({ title: '', description: '', name: '', contact: '' })
+    } catch (err) {
+      alert('حدث خطأ في إرسال الطلب')
+    }
+    setSubmitting(false)
+  }
+
+  const openWhatsApp = () => {
+    if (data?.manager.phone) {
+      const phone = data.manager.phone.replace(/\+/g, '')
+      const message = encodeURIComponent(`مرحباً، أنا من متجر ${data.store.store_name}`)
+      window.open(`https://wa.me/${phone}?text=${message}`, '_blank')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-8 text-center">
+            <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+            <h2 className="text-xl font-bold mb-2">خطأ</h2>
+            <p className="text-muted-foreground">{error || 'الصفحة غير موجودة'}</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (data.is_expired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-8 text-center">
+            <Clock className="h-12 w-12 mx-auto text-amber-500 mb-4" />
+            <h2 className="text-xl font-bold mb-2">انتهت صلاحية الوصول</h2>
+            <p className="text-muted-foreground">
+              انتهت صلاحية الوصول لهذه الصفحة. يرجى التواصل مع مدير العلاقة للحصول على رابط جديد.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const completedTasks = data.tasks.filter(t => t.status === 'done').length
+  const totalTasks = data.tasks.length
+  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+
+  return (
+    <div className="min-h-screen bg-gray-50" dir="rtl">
+      {/* Header */}
+      <header className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-3xl mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              {data.store.store_logo_url ? (
+                <img 
+                  src={data.store.store_logo_url} 
+                  alt={data.store.store_name || ''} 
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              ) : (
+                <Store className="h-6 w-6 text-primary" />
+              )}
+            </div>
+            <div>
+              <h1 className="font-bold text-lg">{data.store.store_name || 'متجرك'}</h1>
+              <p className="text-sm text-muted-foreground">صفحة متابعة المهام</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+        {/* Manager Card */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                  {data.manager.avatar_url ? (
+                    <img 
+                      src={data.manager.avatar_url} 
+                      alt={data.manager.name || ''} 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <User className="h-6 w-6 text-primary" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">مدير العلاقة</p>
+                  <p className="font-semibold">{data.manager.name || 'مدير العلاقة'}</p>
+                </div>
+              </div>
+              {data.manager.phone && (
+                <Button onClick={openWhatsApp} className="bg-green-600 hover:bg-green-700">
+                  <MessageCircle className="h-4 w-4 ml-2" />
+                  واتساب
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Progress Card */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-medium">تقدم المهام</span>
+              <span className="text-sm text-muted-foreground">
+                {completedTasks} من {totalTasks} مهمة
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-primary h-3 rounded-full transition-all"
+                style={{ width: `${progressPercent}%` }}
+              ></div>
+            </div>
+            <p className="text-center text-sm text-muted-foreground mt-2">
+              {progressPercent}% مكتمل
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Tasks List */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">المهام</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {data.tasks.map((task) => (
+                <div key={task.id} className="p-4 flex items-center gap-3">
+                  {task.status === 'done' ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                  ) : (
+                    <Clock className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                  )}
+                  <div className="flex-1">
+                    <p className={task.status === 'done' ? 'line-through text-muted-foreground' : ''}>
+                      {task.title}
+                    </p>
+                    {task.section_title && (
+                      <p className="text-xs text-muted-foreground">{task.section_title}</p>
+                    )}
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    task.status === 'done' 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {task.status === 'done' ? 'منجز' : 'قيد المتابعة'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* New Task Form */}
+        {!showTaskForm ? (
+          <Button 
+            onClick={() => setShowTaskForm(true)} 
+            variant="secondary" 
+            className="w-full"
+          >
+            <Plus className="h-4 w-4 ml-2" />
+            إرسال طلب جديد
+          </Button>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">طلب جديد</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">عنوان الطلب *</label>
+                <Input
+                  placeholder="مثال: تحسين صور المنتجات"
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">التفاصيل</label>
+                <textarea
+                  className="w-full px-3 py-2 border rounded-md text-sm"
+                  rows={3}
+                  placeholder="اكتب تفاصيل طلبك..."
+                  value={newTask.description}
+                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">اسمك *</label>
+                  <Input
+                    placeholder="الاسم"
+                    value={newTask.name}
+                    onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">رقم التواصل *</label>
+                  <Input
+                    placeholder="رقم الجوال أو البريد"
+                    value={newTask.contact}
+                    onChange={(e) => setNewTask({ ...newTask, contact: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSubmitTask} 
+                  disabled={submitting || !newTask.title || !newTask.name || !newTask.contact}
+                  className="flex-1"
+                >
+                  {submitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  onClick={() => setShowTaskForm(false)}
+                >
+                  إلغاء
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="text-center py-6 text-sm text-muted-foreground">
+        <p>نظام إدارة المتاجر - ZID Dashboard</p>
+      </footer>
+    </div>
+  )
+}

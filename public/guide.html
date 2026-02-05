@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز المعرفة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        zid: { purple: '#5A2C84', darkPurple: '#421C65', gold: '#FFC72C', light: '#F9F7FC', text: '#373737', grey: '#8D8D8D' }
+                    },
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    boxShadow: { 'card': '0 4px 20px rgba(0,0,0,0.03)', 'card-hover': '0 12px 24px rgba(90, 44, 132, 0.08)' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #F9F7FC; font-family: 'Cairo', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #5A2C84; }
+        .hero-pattern { background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 30px 30px; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+
+        // -- START CONFIG --
+        const APP_CONFIG = {
+    "assets": {
+        "logoUrl": "https://i.ibb.co/23VfDZFf/Logo-Icon.png"
+    },
+    "text": {
+        "siteTitle": "مركز المعرفة",
+        "heroTitle": "الدليل التشغيلي لمدراء العلاقة 🚀",
+        "heroSubtitle": "ابحث في المصادر، الأدلة، والشروحات لتجد إجابات سريعة.",
+        "searchPlaceholder": "ابحث عن مقال، فيديو، أو معلومة...",
+        "searchResults": "نتائج البحث عن:",
+        "noResults": "لم يتم العثور على نتائج تطابق بحثك.",
+        "emptyCategory": "لا توجد مقالات في هذا القسم حالياً.",
+        "readMore": "عرض المقال",
+        "footer": "© 2025 بوابة الموظفين - جميع الحقوق محفوظة",
+        "adminModeOn": "إغلاق التعديل",
+        "adminModeOff": "الإدارة / التعديل",
+        "saveChanges": "حفظ التغييرات نهائياً",
+        "addCategory": "قسم جديد",
+        "addArticle": "مقال جديد",
+        "editContent": "تعديل المحتوى",
+        "delete": "حذف",
+        "blockText": "نص",
+        "blockImage": "صورة",
+        "blockVideo": "فيديو",
+        "newCategoryName": "عنوان القسم...",
+        "newArticleTitle": "عنوان المقال الجديد",
+        "newArticleDesc": "وصف قصير للمقال...",
+        "textPlaceholder": "اكتب المحتوى النصي هنا...",
+        "linkPlaceholder": "ضع الرابط أو كود التضمين (Embed Code)...",
+        "videoError": "رابط الفيديو غير صحيح"
+    },
+    "initialData": [
+        {
+            "id": 1,
+            "title": "الإجراءات والاعمال اليومية",
+            "articles": [
+                {
+                    "id": 101,
+                    "title": "بروتوكول معالجة التذاكر والدعم الفني (المشاكل التقنية )",
+                    "description": "بروتوكول معالجة التذاكر والدعم الفني (المشاكل التقنية )",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "المرحلة الاولى : رفع المشاكل\n•        يتم رفع التذكرة من خلال منصة هب سبوت  مع ارفاق التفاصيل\n•        التأكد من تصنيف المشكلة بدقة\n•        في حال كانت المشكلة طارئة, يتم الرفع فورا في قناة مخصصة\n\nالمرحلة الثانية : التنسيق\n•        التواصل مع الشخص المسؤول لتحويل التذكرة\n•        متابعة حالة التذكرة مع الشخص الثاني المسؤول\n•        التأكد من أن جميع الملاحظات التقنية واضحة للفريق\n\nالمرحلة الثالثة : تحديث التاجر\n•        مشاركة مستجدات الحل التقني مع التاجر\n•        تزويد التاجر برقم التذكرة\n•        إبلاغ التاجر بأن المشكلة قيد المعالجة\n\nالمرحلة الرابعة : المتابعة الداخلية\n•        متابعة التحديثات النهائية مطابقتها للواقع\n•        إغلاق التذكرة بعد التأكد من رضا التاجر وانتهاء المشكلة"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228257863,
+                    "title": "بروتوكول الاجتماعات والحوار",
+                    "description": "بروتوكول الاجتماعات والحوار\n",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "المرحلة الاولى : مرحلة ما قبل الاجتماع\n•        يتم التنسيق مع التاجر في مجموعة الواتساب المخصصة لتحديد وقت يناسب الطرفين\n•        إرسال رسالة توضح هدف الاجتماع مثل: مراجعة الاداء الشهري, أو نقاش حملة تسويقية جديدة\n•        جدولة الاجتماع في قوقل كالندر\n\nالمرحلة الثانية : ادارة الحوار\n•        التعريف بمدير العلاقة والنقاط اللي بيتم نقاشها\n•        البدء بنقاش النقاط الاساسية للوصول لهدف واضح\n•        عرض المقترحات والفرص اللي تساهم في نمو المتجر\n•        الاجابة على استفسارات التاجر وتدوين متطلباته\n•        تلخيص سريع لكل اللي تم الاتفاق عليه, وشكر التاجر على وقته\n\nالمرحلة الثالثة : ملخص الاجتماع\nمشاركة ملخص الاجتماع مع التاجر عالقروب، ويشمل:\n•        توجيه الشكر للتاجر على وقته\n•        تلخيص للأشياء اللي تم نقاشها\n\n- خطة العمل \n•        توضيح المهام المطلوبة بدقة من الطرفين\n•        تحديد الوقت المحدد للتسليم\n•        شكر ختامي والتاكيد على المتابعة والاهتمام\n\nالمرحلة الرابعة : المتابعة الداخلية\n•        تحويل ملاحظات الاجتماع لمهام فعلية\n•        اسناد المهام للاقسام المعنية (تسويق، تصميم، تقنية) ومتابعة التنفيذ"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228258824,
+                    "title": "مشاكل التجار مع الشركاء",
+                    "description": "مشاكل التجار مع الشركاء",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "المرحلة الاولى : رفع المشكلة\n•        يتم رفع كل مشاكل التجار من خلال القناة المخصصة\n•        نعتمد في المتابعة على موظف مسؤول من خلال لوحة تحكم الشركاء\n•        يتم التواصل المباشر مع المسؤول اذا كان الموضوع طارئ\n\nالمرحلة الثانية : المتابعة والتحديث\n•        متابعة حالة التذاكر المرفوعة بشكل دوري\n•        تحديث التاجر بأي مستجدات توصلنا بخصوص مشكلته\n•        التأكد ان كل مشاكل التاجر تم الرد عليها وحلها\n\nالمرحلة الثالثة : التحديث المستمر\n•        إبلاغ التاجر بالاجراء اللي اتخذ\n•        توضيح حالة المشكلة الحالية (تم الحل، قيد المعالجة، ننتظر الرد)\n\nالمرحلة الرابعة : التوثيق الداخلي\n•        تحويل ردود الشركاء لمهام أو تحديثات\n•        إسناد أي متطلبات تقنية للأقسام المعنية"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228259406,
+                    "title": "الطلبات الواردة من الأقسام الأخرى",
+                    "description": "الطلبات الواردة من الأقسام الأخرى",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "المرحلة الاولى : رفع الطلب\n•        تعبئة نموذج رفع التذاكر في هب سبوت مع كتابة التفاصيل\n•        التأكد من ارفاق كل المعلومات اللي يحتاجها القسم الآخر\n•       اذا كان الطلب يخص سحب بيانات العملاء يتم توجيهه لفريق الداتا\n\nالمرحلة الثانية : المتابعة\n•        نسخ رابط التذكرة وارسالها في القناة المخصصة\n•        المتابعة مع القسم المسؤول\n•        في حال كان الموضوع مرة مهم يتم عمل منشن للمسؤول في هب سبوت وفي قناة التواصل\n\nالمرحلة الثالثة : تحديث حالة الطلب\n- مشاركة مستجدات الطلب:\n•        تأكيد استلام التذكرة وبدء العمل عليها\n•        توضيح أي نواقص أو متطلبات إضافية يحتاجها فريق العمل\n\nالمرحلة الرابعة : المتابعة\n•        تحويل التحديثات اللي تتم في القنوات إلى ملاحظات في هب سبوت\n•        اسناد أي مهام فرعية للأقسام المعنية (مثل الداتا أو التقنية)"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228260045,
+                    "title": "التعامل مع رغبة الانتقال لمنصة أخرى",
+                    "description": "التعامل مع رغبة الانتقال لمنصة أخرى",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "المرحلة الاولى : احتواء التاجر\n•        التواصل المباشر مع التاجر\n•        الاستفسار عن الأسباب اللي خلته يفكر بالانتقال\n•        الاعتراف بحق التاجر في الحصول على أفضل خدمة والتعامل مع حالته كأولوية قصوى\n\nالمرحلة الثانية : تحليل المشكلة\n•        التعرف على نوع المشكلة, سواء كانت نقص في الخصائص أو مشكلة ثانية\n•        التواصل مع فريق المنتج لمناقشة التحديات\n•        بناء خطة عمل اكشن بلان واضحة لمعالجة المشاكل\n\nالمرحلة الثالثة : التلخيص\n•        مشاركة خلاصة الاجتماع مع التاجر لإعادة بناء الثقة، وتشمل:\n•        شكر التاجر على صراحته ومشاركته للتحديات\n•        توضيح الحلول اللي بنشتغل عليها لإرضائه\n\nالمرحلة الرابعة : المتابعة\n•        تحويل خطة العمل لمهام فعلية واعتبارها أولوية عالية\n•        إسناد المهام لفريق المنتج والتقنية ومتابعة التنفيذ"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228260576,
+                    "title": "خصائص تطلب من التجار ( جديدة/تطويرية)",
+                    "description": "خصائص تطلب من التجار ( جديدة/تطويرية)",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "المرحلة الاولى : رفع الاقتراحات\n•        رفع طلب الخاصية الجديدة من خلال منصة الاقتراحات\n•        تنبيه فريق المنتج بوجود طلب جديد عن طريق القناة المشتركة\n•        التأكد من صياغة المقترح بشكل واضح\n\nالمرحلة الثانية : المتابعة\n•        متابعة حالة الاقتراحات مع فريق المنتج\n•        مناقشة الطلبات المعلقة خلال الاجتماع الشهري الدوري\n•        تقييم أهمية الخاصية وتحديد أولويتها ضمن خطة التطوير الشهرية\n\nالمرحلة الثالثة : تحديث التاجر\n•        إبلاغ التاجر بمستجدات طلبه عبر القنوات الرسمية، ويشمل:\n•        شكر التاجر على اقتراحه اللي يساهم في تطوير المنصة\n•        تزويد التاجر بالوقت المتوقع للجهوزية"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228285697,
+                    "title": "إدارة التحديات والمعوقات التشغيلية",
+                    "description": "إدارة التحديات والمعوقات التشغيلية",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "اكتب المحتوى النصي هنا..."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": 1770228372264,
+            "title": "الطريق للنمّـو",
+            "articles": [
+                {
+                    "id": 1770228378628,
+                    "title": "خطة نمــو",
+                    "description": "خطة نمــو",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "اكتب المحتوى النصي هنا..."
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228379503,
+                    "title": "تحليل أداء الحملات الإعلانية",
+                    "description": "تحليل أداء الحملات الإعلانية",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "\nقبل فترة شاركنا معكم الأوديت \"المؤتمت\" لتحليل الحملات الإعلانية، وجرّبناه مع مجموعة من التجار وشفنا فعليًا كيف ساعدنا نفهم وضعهم بالتسويق ونشوف اهم الفرص للتحسين \n\n\n\nوعشان نساعدكم تساعدون تجاركم بشكل أسرع ونختصر عليكم الوقت بانكم تستخدمون الاوديت \nتقدرون الآن تستخدمونها لتحليل حملات تجاركم واقتراح حلول مبنية على أرقام وبيانات واضحة\n\n\n\nخطوات الاستخدام باختصار:\n-تدخلون على رابط أوبتمايز:\n[https://reporting.optimizeapp.com/ar]\n-تحددون حسابات التاجر اللي تبغون تحللون حملته.\n-تختارون مدة التحليل (مثل اخر 30 يوم / ٣ اشهر / ١٢ شهر...) حسب أداء الحملة وفترة تشغيلها.\n-تصدرون التقرير، وبيوصلكم على الإيميل\n\n\nكيف تحددون مدة التحليل؟\nإذا الحملة شغالة حاليًا، نختار آخر ثلاث شهور عشان نقيس الأداء الحالي.إذا الحملة انتهت، نختار كامل مدة تشغيلها.وإذا لاحظتوا تذبذب بالأداء، ممكن نجزّئها فترات ونقارن بينها.واذا ماعندكم تفاصيل كافية عن حملاتهم قارنوها السنة الحالية مع السنة الماضية.\n\nرابط الشرح (Loom): \n [https://www.loom.com/share/d6f3c0c542c14cd393308a434126bda5]\nمرفق لكم ملف فيه كل التفاصيل – من الصلاحيات، إلى طريقة وصول التقرير."
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228380285,
+                    "title": "رفـع حجم متوسط السلة",
+                    "description": "رفـع حجم متوسط السلة",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "تطبيق زيادة"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228380973,
+                    "title": "تحليل رحلة العميل والتحسين عليها",
+                    "description": "تحليل رحلة العميل والتحسين عليها",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "هوتجار - كلاريتي"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228381964,
+                    "title": "تكلفة الطلب الواحد",
+                    "description": "تكلفة الطلب الواحد",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "اكتب المحتوى النصي هنا..."
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228382566,
+                    "title": "التوسّـع لأسواق جديدة",
+                    "description": "التوسّـع لأسواق جديدة",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "مزيد - ترنديول - امازون - جاهز"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228383348,
+                    "title": "التسويـق بالعمولة",
+                    "description": "التسويـق بالعمولة",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "عربي لينك - صحصح"
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228383972,
+                    "title": "تحسين محركات البحث SEO",
+                    "description": "تحسين محركات البحث SEO",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "اكتب المحتوى النصي هنا..."
+                        }
+                    ]
+                },
+                {
+                    "id": 1770228384446,
+                    "title": "السلات المتروكة",
+                    "description": "السلات المتروكة",
+                    "content": [
+                        {
+                            "type": "text",
+                            "value": "واتساب زد - تنبيهات زد"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+};
+        // -- END CONFIG --
+
+        const Icons = {
+            Search: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+            Settings: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>,
+            Plus: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+            Trash: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+            X: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="6"></line><line x1="6" y1="18" x2="18" y2="6"></line><path d="M18 6L6 18M6 6l12 12"/></svg>,
+            Save: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>,
+            Article: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
+            Image: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>,
+            Video: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>,
+            Text: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>,
+            ArrowLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>,
+            ArrowUp: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>,
+            ArrowDown: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+        };
+
+        const { useState, useMemo, useEffect } = React;
+
+        function App() {
+            // LOAD INITIAL STATE
+            const [categories, setCategories] = useState(() => {
+                const saved = localStorage.getItem('zid_knowledge_data');
+                // Use InitialData from Config, unless localstorage is present (for session)
+                return saved ? JSON.parse(saved) : APP_CONFIG.initialData;
+            });
+
+            const [activeTab, setActiveTab] = useState(0); 
+            const [searchQuery, setSearchQuery] = useState("");
+            const [isAdmin, setIsAdmin] = useState(false);
+            const [selectedArticle, setSelectedArticle] = useState(null);
+            
+            // التحقق من صلاحية الأدمن من URL
+            const canShowAdminButton = new URLSearchParams(window.location.search).get('admin') === 'true';
+
+            // AUTO-SAVE TO LOCAL STORAGE
+            useEffect(() => {
+                localStorage.setItem('zid_knowledge_data', JSON.stringify(categories));
+            }, [categories]);
+
+            const getYouTubeId = (input) => {
+                if (!input) return null;
+                let url = input;
+                if (input.includes('<iframe')) {
+                    const srcMatch = input.match(/src="([^"]+)"/);
+                    if (srcMatch && srcMatch[1]) url = srcMatch[1];
+                }
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : null;
+            };
+
+            // --- HARD SAVE FUNCTIONALITY ---
+            const downloadHtmlFile = () => {
+                // 1. Get the current source code of this script
+                const scripts = document.getElementsByTagName('script');
+                let sourceCode = "";
+                for(let script of scripts) {
+                    if (script.type === "text/babel" && script.innerHTML.includes("function App()")) {
+                        sourceCode = script.innerHTML;
+                        break;
+                    }
+                }
+
+                // 2. Prepare the new configuration with CURRENT data
+                const newConfig = {
+                    assets: APP_CONFIG.assets,
+                    text: APP_CONFIG.text,
+                    initialData: categories // <--- Hard code the current state here
+                };
+                
+                const newConfigString = `const APP_CONFIG = ${JSON.stringify(newConfig, null, 4)};`;
+                const startMarker = '// -- START CONFIG --';
+                const endMarker = '// -- END CONFIG --';
+                
+                // 3. Inject new config into source code
+                const regex = new RegExp(`${startMarker}[\\s\\S]*?${endMarker}`);
+                const updatedScript = sourceCode.replace(regex, `${startMarker}\n        ${newConfigString}\n        ${endMarker}`);
+
+                // 4. Construct the Full HTML File explicitly to avoid placement errors
+                const htmlContent = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${APP_CONFIG.text.siteTitle}</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        zid: { purple: '#5A2C84', darkPurple: '#421C65', gold: '#FFC72C', light: '#F9F7FC', text: '#373737', grey: '#8D8D8D' }
+                    },
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    boxShadow: { 'card': '0 4px 20px rgba(0,0,0,0.03)', 'card-hover': '0 12px 24px rgba(90, 44, 132, 0.08)' }
+                }
+            }
+        }
+    <\/script>
+    <style>
+        body { background-color: #F9F7FC; font-family: 'Cairo', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #5A2C84; }
+        .hero-pattern { background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 30px 30px; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+${updatedScript}
+    <\/script>
+</body>
+</html>`;
+                
+                // 5. Trigger Download
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'zid-knowledge-hub-v2.html';
+                a.click();
+                alert("تم حفظ النسخة الجديدة بنجاح! الملف الجديد يحتوي على كافة التعديلات.");
+            };
+
+            // CRUD OPS
+            const updateCategoryTitle = (idx, val) => { const n = [...categories]; n[idx].title = val; setCategories(n); };
+            const deleteCategory = (idx) => { if(confirm("حذف القسم؟")) { setCategories(categories.filter((_, i) => i !== idx)); setActiveTab(0); } };
+            const addCategory = () => { setCategories([...categories, { id: Date.now(), title: "قسم جديد", articles: [] }]); setActiveTab(categories.length); };
+            const addArticle = () => {
+                const n = [...categories];
+                n[activeTab].articles.push({
+                    id: Date.now(),
+                    title: APP_CONFIG.text.newArticleTitle,
+                    description: APP_CONFIG.text.newArticleDesc,
+                    content: [{ type: "text", value: APP_CONFIG.text.textPlaceholder }]
+                });
+                setCategories(n);
+            };
+            const updateArticleInfo = (catIdx, artIdx, field, val) => {
+                const n = [...categories];
+                n[catIdx].articles[artIdx][field] = val;
+                setCategories(n);
+            };
+            const deleteArticle = (catIdx, artIdx) => {
+                if(confirm("حذف المقال؟")) {
+                    const n = [...categories];
+                    n[catIdx].articles.splice(artIdx, 1);
+                    setCategories(n);
+                }
+            };
+            const addContentBlock = (catIdx, artIdx, type) => {
+                const n = [...categories];
+                n[catIdx].articles[artIdx].content.push({ type, value: type === 'text' ? APP_CONFIG.text.textPlaceholder : '' });
+                setCategories(n);
+            };
+            const updateContentBlock = (catIdx, artIdx, blkIdx, val) => {
+                const n = [...categories];
+                n[catIdx].articles[artIdx].content[blkIdx].value = val;
+                setCategories(n);
+            };
+            const removeContentBlock = (catIdx, artIdx, blkIdx) => {
+                const n = [...categories];
+                n[catIdx].articles[artIdx].content.splice(blkIdx, 1);
+                setCategories(n);
+            };
+            const moveContentBlock = (catIdx, artIdx, blkIdx, direction) => {
+                const n = [...categories];
+                const content = n[catIdx].articles[artIdx].content;
+                const newIndex = blkIdx + direction;
+                if (newIndex >= 0 && newIndex < content.length) {
+                    [content[blkIdx], content[newIndex]] = [content[newIndex], content[blkIdx]];
+                    setCategories(n);
+                }
+            };
+
+            const filteredData = useMemo(() => {
+                if (!searchQuery.trim()) return null;
+                const query = searchQuery.toLowerCase();
+                let results = [];
+                categories.forEach((cat, catIdx) => {
+                    cat.articles.forEach((art, artIdx) => {
+                        if (art.title.toLowerCase().includes(query) || art.description.toLowerCase().includes(query)) {
+                            results.push({ ...art, catIdx, artIdx, categoryName: cat.title });
+                        }
+                    });
+                });
+                return results;
+            }, [categories, searchQuery]);
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    <header className="bg-gradient-to-br from-zid-darkPurple to-zid-purple text-white relative overflow-hidden">
+                        <div className="absolute inset-0 hero-pattern opacity-10"></div>
+                        <div className="container mx-auto px-6 py-6 flex justify-between items-center relative z-10">
+                            <div className="flex items-center gap-4">
+                                <img src={APP_CONFIG.assets.logoUrl} className="h-8 brightness-0 invert" alt="Logo" />
+                                <span className="opacity-80 text-sm border-r border-white/20 pr-4 mr-1 h-6 flex items-center font-semibold">{APP_CONFIG.text.siteTitle}</span>
+                            </div>
+                            <div className="flex gap-3">
+                                {isAdmin && (
+                                    <button onClick={downloadHtmlFile} className="bg-zid-gold text-zid-purple px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:scale-105 transition-transform">
+                                        <Icons.Save /> {APP_CONFIG.text.saveChanges}
+                                    </button>
+                                )}
+                                {canShowAdminButton && (
+                                    <button onClick={() => setIsAdmin(!isAdmin)} className={`px-4 py-2 rounded-xl text-sm font-bold border transition-colors ${isAdmin ? 'bg-red-500 border-red-500' : 'border-white/20 hover:bg-white/10'}`}>
+                                        {isAdmin ? APP_CONFIG.text.adminModeOn : APP_CONFIG.text.adminModeOff}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <div className="container mx-auto px-6 pt-12 pb-20 text-center relative z-10">
+                            <h1 className="text-3xl md:text-5xl font-black mb-4">{APP_CONFIG.text.heroTitle}</h1>
+                            <p className="text-purple-100 text-lg mb-12">{APP_CONFIG.text.heroSubtitle}</p>
+                            <div className="max-w-3xl mx-auto relative">
+                                <div className="absolute inset-y-0 right-0 pr-6 flex items-center text-zid-purple"><Icons.Search /></div>
+                                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={APP_CONFIG.text.searchPlaceholder} className="w-full py-5 pr-14 pl-6 rounded-2xl text-gray-800 text-lg shadow-2xl focus:outline-none" />
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 container mx-auto px-6 py-12 -mt-10 relative z-20">
+                        {!searchQuery && (
+                            <div className="flex flex-wrap justify-center gap-3 mb-12">
+                                {categories.map((cat, idx) => (
+                                    <button key={cat.id} onClick={() => setActiveTab(idx)} className={`px-6 py-3 rounded-2xl font-bold transition-all ${activeTab === idx ? 'bg-zid-purple text-white shadow-xl scale-110' : 'bg-white text-gray-500 hover:bg-purple-50'}`}>
+                                        {cat.title}
+                                    </button>
+                                ))}
+                                {isAdmin && <button onClick={addCategory} className="w-12 bg-gray-200 rounded-2xl flex items-center justify-center hover:bg-gray-300 transition-colors"><Icons.Plus /></button>}
+                            </div>
+                        )}
+
+                        {isAdmin && !searchQuery && (
+                            <div className="flex justify-between items-center mb-8 bg-white p-5 rounded-2xl shadow-card">
+                                <input value={categories[activeTab]?.title || ""} onChange={(e) => updateCategoryTitle(activeTab, e.target.value)} className="font-bold text-2xl text-zid-purple outline-none border-b-2 border-gray-100 focus:border-zid-purple" />
+                                <div className="flex gap-2">
+                                    <button onClick={addArticle} className="bg-zid-purple text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-zid-darkPurple">+ {APP_CONFIG.text.addArticle}</button>
+                                    <button onClick={() => deleteCategory(activeTab)} className="text-red-500 bg-red-50 px-4 py-2.5 rounded-xl hover:bg-red-100 transition-colors"><Icons.Trash /></button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {(searchQuery ? filteredData : categories[activeTab]?.articles)?.map((article, idx) => {
+                                const catIdx = searchQuery ? article.catIdx : activeTab;
+                                const artIdx = searchQuery ? article.artIdx : idx;
+                                return (
+                                    <div key={article.id} onClick={() => !isAdmin && setSelectedArticle(article)} className="bg-white rounded-[2rem] p-7 shadow-card hover:shadow-card-hover cursor-pointer transition-all flex flex-col h-full relative">
+                                        <div className="flex items-start justify-between mb-5">
+                                            <div className="w-12 h-12 rounded-xl bg-zid-light text-zid-purple flex items-center justify-center"><Icons.Article /></div>
+                                        </div>
+                                        {isAdmin ? (
+                                            <div className="space-y-4 flex-1">
+                                                <input value={article.title} onClick={(e)=>e.stopPropagation()} onChange={(e) => updateArticleInfo(catIdx, artIdx, 'title', e.target.value)} className="w-full font-bold bg-gray-50 p-2 rounded-lg" />
+                                                <textarea value={article.description} onClick={(e)=>e.stopPropagation()} onChange={(e) => updateArticleInfo(catIdx, artIdx, 'description', e.target.value)} className="w-full text-sm bg-gray-50 p-2 rounded-lg h-20 resize-none" />
+                                                <div className="flex gap-2" onClick={(e)=>e.stopPropagation()}>
+                                                    <button onClick={() => setSelectedArticle(article)} className="text-xs bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold flex-1 hover:bg-blue-100">{APP_CONFIG.text.editContent}</button>
+                                                    <button onClick={() => deleteArticle(catIdx, artIdx)} className="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-lg hover:bg-red-100"><Icons.Trash /></button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <h3 className="text-xl font-bold text-zid-text mb-3">{article.title}</h3>
+                                                <p className="text-zid-grey text-sm mb-8 line-clamp-3">{article.description}</p>
+                                                <div className="mt-auto text-zid-purple text-sm font-bold flex items-center gap-2">{APP_CONFIG.text.readMore} <Icons.ArrowLeft /></div>
+                                            </>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </main>
+
+                    <footer className="bg-white border-t py-10 text-center text-gray-400 text-sm">
+                        <p>{APP_CONFIG.text.footer}</p>
+                    </footer>
+
+                    {selectedArticle && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-zid-darkPurple/60 backdrop-blur-md" onClick={() => setSelectedArticle(null)}></div>
+                            <div className="bg-white w-full max-w-4xl h-[90vh] rounded-[2.5rem] relative z-10 flex flex-col overflow-hidden animate-fade-in">
+                                <div className="p-8 border-b flex justify-between items-start">
+                                    <h2 className="text-3xl font-black text-gray-800">{selectedArticle.title}</h2>
+                                    <button onClick={() => setSelectedArticle(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><Icons.X /></button>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-8 bg-[#FAFAFA]">
+                                    <div className="max-w-3xl mx-auto space-y-8">
+                                        <p className="text-xl text-gray-600 font-medium border-r-4 border-zid-gold pr-4 leading-relaxed">{selectedArticle.description}</p>
+                                        {selectedArticle.content.map((block, blkIdx) => {
+                                            let rCat = -1, rArt = -1;
+                                            categories.forEach((c, ci) => c.articles.forEach((a, ai) => { if(a.id === selectedArticle.id) { rCat=ci; rArt=ai; } }));
+                                            const videoId = getYouTubeId(block.value);
+                                            return (
+                                                <div key={blkIdx} className="relative">
+                                                    {!isAdmin ? (
+                                                        <div className="py-4">
+                                                            {block.type === 'text' && <p className="text-lg leading-8 whitespace-pre-wrap text-zid-text">{block.value}</p>}
+                                                            {block.type === 'image' && <img src={block.value} className="rounded-2xl w-full shadow-lg" />}
+                                                            {block.type === 'video' && videoId && (
+                                                                <div className="aspect-video rounded-2xl overflow-hidden shadow-lg">
+                                                                    <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${videoId}`} frameBorder="0" allowFullScreen></iframe>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="bg-white p-6 border-2 border-dashed rounded-2xl border-gray-200">
+                                                            <div className="flex gap-2 mb-4">
+                                                                <button onClick={() => moveContentBlock(rCat, rArt, blkIdx, -1)} className="p-1 bg-gray-100 rounded hover:bg-gray-200"><Icons.ArrowUp /></button>
+                                                                <button onClick={() => moveContentBlock(rCat, rArt, blkIdx, 1)} className="p-1 bg-gray-100 rounded hover:bg-gray-200"><Icons.ArrowDown /></button>
+                                                                <button onClick={() => removeContentBlock(rCat, rArt, blkIdx)} className="text-red-500 p-1 hover:bg-red-50 rounded"><Icons.Trash /></button>
+                                                            </div>
+                                                            {block.type === 'text' ? (
+                                                                <textarea value={block.value} onChange={(e) => updateContentBlock(rCat, rArt, blkIdx, e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl min-h-[150px] outline-none focus:ring-2 ring-zid-purple/20" />
+                                                            ) : (
+                                                                <input value={block.value} onChange={(e) => updateContentBlock(rCat, rArt, blkIdx, e.target.value)} className="w-full p-3 bg-gray-50 rounded-xl outline-none focus:ring-2 ring-zid-purple/20" placeholder="Link here (Image URL or Video Link)..." />
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                        {isAdmin && (
+                                            <div className="flex justify-center gap-4 py-8 border-t border-dashed border-gray-200">
+                                                {(() => {
+                                                    let rCat = -1, rArt = -1;
+                                                    categories.forEach((c, ci) => c.articles.forEach((a, ai) => { if(a.id === selectedArticle.id) { rCat=ci; rArt=ai; } }));
+                                                    return rCat !== -1 && (
+                                                        <>
+                                                            <button onClick={() => addContentBlock(rCat, rArt, 'text')} className="p-4 bg-white border rounded-xl flex flex-col items-center gap-2 w-24 hover:border-zid-purple hover:text-zid-purple transition-all"><Icons.Text /> <span className="text-xs font-bold">نص</span></button>
+                                                            <button onClick={() => addContentBlock(rCat, rArt, 'image')} className="p-4 bg-white border rounded-xl flex flex-col items-center gap-2 w-24 hover:border-zid-purple hover:text-zid-purple transition-all"><Icons.Image /> <span className="text-xs font-bold">صورة</span></button>
+                                                            <button onClick={() => addContentBlock(rCat, rArt, 'video')} className="p-4 bg-white border rounded-xl flex flex-col items-center gap-2 w-24 hover:border-zid-purple hover:text-zid-purple transition-all"><Icons.Video /> <span className="text-xs font-bold">فيديو</span></button>
+                                                        </>
+                                                    )
+                                                })()}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    
+    </script>
+</body>
+</html>
