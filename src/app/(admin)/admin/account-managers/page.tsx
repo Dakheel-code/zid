@@ -13,7 +13,8 @@ import {
   X,
   Loader2,
   Trash2,
-  MoreVertical
+  MoreVertical,
+  Star
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,8 @@ interface ManagerWithStats {
   created_at: string
   stores_count: number
   active_tasks_count: number
+  average_rating: number | null
+  total_ratings: number
 }
 
 export default function AdminAccountManagersPage() {
@@ -91,10 +94,26 @@ export default function AdminAccountManagersPage() {
             tasksCount = count || 0
           }
 
+          // جلب متوسط التقييم
+          const { data: ratingData } = await supabase
+            .from('manager_ratings')
+            .select('rating')
+            .eq('manager_id', manager.id)
+          
+          let averageRating = null
+          let totalRatings = 0
+          if (ratingData && ratingData.length > 0) {
+            totalRatings = ratingData.length
+            const sum = ratingData.reduce((acc, r) => acc + r.rating, 0)
+            averageRating = Math.round((sum / totalRatings) * 10) / 10
+          }
+
           return {
             ...manager,
             stores_count: storesCount,
-            active_tasks_count: tasksCount
+            active_tasks_count: tasksCount,
+            average_rating: averageRating,
+            total_ratings: totalRatings
           }
         })
       )
@@ -267,32 +286,43 @@ export default function AdminAccountManagersPage() {
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-[#3d3555]">
+              <div className="grid grid-cols-3 gap-2 pt-4 border-t border-[#3d3555]">
                 <div 
-                  className="text-center p-3 bg-[#1a1625] rounded-lg cursor-pointer hover:bg-[#251d35] transition-colors"
+                  className="text-center p-2 bg-[#1a1625] rounded-lg cursor-pointer hover:bg-[#251d35] transition-colors"
                   onClick={(e) => {
                     e.stopPropagation()
                     router.push(`/admin/stores?manager=${manager.id}`)
                   }}
                 >
                   <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
-                    <Store className="h-4 w-4" />
+                    <Store className="h-3.5 w-3.5" />
                   </div>
-                  <p className="text-2xl font-bold text-white">{manager.stores_count > 0 ? manager.stores_count : '-'}</p>
-                  <p className="text-xs text-gray-500">المتاجر</p>
+                  <p className="text-xl font-bold text-white">{manager.stores_count > 0 ? manager.stores_count : '-'}</p>
+                  <p className="text-[10px] text-gray-500">المتاجر</p>
                 </div>
-                <div className="text-center p-3 bg-[#1a1625] rounded-lg">
+                <div className="text-center p-2 bg-[#1a1625] rounded-lg">
                   <div className="flex items-center justify-center gap-1 text-gray-500 mb-1">
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-3.5 w-3.5" />
                   </div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-xl font-bold text-white">
                     {manager.stores_count > 0 
                       ? `${manager.active_tasks_count > 0 
                           ? Math.round((1 - manager.active_tasks_count / (manager.stores_count * 5)) * 100) 
                           : 100}%`
                       : '-'}
                   </p>
-                  <p className="text-xs text-gray-500">نسبة الإنجاز</p>
+                  <p className="text-[10px] text-gray-500">الإنجاز</p>
+                </div>
+                <div className="text-center p-2 bg-[#1a1625] rounded-lg">
+                  <div className="flex items-center justify-center gap-1 text-yellow-500 mb-1">
+                    <Star className="h-3.5 w-3.5 fill-yellow-500" />
+                  </div>
+                  <p className="text-xl font-bold text-white">
+                    {manager.average_rating ? manager.average_rating : '-'}
+                  </p>
+                  <p className="text-[10px] text-gray-500">
+                    {manager.total_ratings > 0 ? `(${manager.total_ratings})` : 'التقييم'}
+                  </p>
                 </div>
               </div>
             </CardContent>

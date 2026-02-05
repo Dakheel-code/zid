@@ -17,7 +17,8 @@ import {
   Image as ImageIcon,
   X,
   Send,
-  Loader2
+  Loader2,
+  Star
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -76,6 +77,14 @@ export default function PublicStorePage() {
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null)
   const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null)
   const [uploadingAttachment, setUploadingAttachment] = useState(false)
+  
+  // التقييم
+  const [userRating, setUserRating] = useState<number>(0)
+  const [hoverRating, setHoverRating] = useState<number>(0)
+  const [ratingComment, setRatingComment] = useState('')
+  const [existingRating, setExistingRating] = useState<{ rating: number; comment: string | null } | null>(null)
+  const [submittingRating, setSubmittingRating] = useState(false)
+  const [showRatingForm, setShowRatingForm] = useState(false)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -171,6 +180,22 @@ export default function PublicStorePage() {
         
         if (commentsData) {
           setComments(commentsData)
+        }
+        
+        // جلب التقييم الحالي إذا وجد
+        if (storeData.assigned_manager_id) {
+          const { data: ratingData } = await supabase
+            .from('manager_ratings')
+            .select('rating, comment')
+            .eq('manager_id', storeData.assigned_manager_id)
+            .eq('store_id', storeId)
+            .single()
+          
+          if (ratingData) {
+            setExistingRating(ratingData)
+            setUserRating(ratingData.rating)
+            setRatingComment(ratingData.comment || '')
+          }
         }
         
         setLoading(false)
@@ -318,6 +343,49 @@ export default function PublicStorePage() {
     }
   }
 
+  // إرسال التقييم
+  const handleSubmitRating = async () => {
+    if (userRating === 0 || !data?.manager.id) return
+    
+    setSubmittingRating(true)
+    try {
+      if (existingRating) {
+        // تحديث التقييم الموجود
+        const { error } = await supabase
+          .from('manager_ratings')
+          .update({
+            rating: userRating,
+            comment: ratingComment || null
+          })
+          .eq('manager_id', data.manager.id)
+          .eq('store_id', token)
+        
+        if (!error) {
+          setExistingRating({ rating: userRating, comment: ratingComment || null })
+          setShowRatingForm(false)
+        }
+      } else {
+        // إضافة تقييم جديد
+        const { error } = await supabase
+          .from('manager_ratings')
+          .insert({
+            manager_id: data.manager.id,
+            store_id: token,
+            rating: userRating,
+            comment: ratingComment || null
+          })
+        
+        if (!error) {
+          setExistingRating({ rating: userRating, comment: ratingComment || null })
+          setShowRatingForm(false)
+        }
+      }
+    } catch (err) {
+      console.error('Error submitting rating:', err)
+    }
+    setSubmittingRating(false)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#1a1230]">
@@ -454,6 +522,99 @@ export default function PublicStorePage() {
                 </a>
               )}
             </div>
+          </div>
+          
+          {/* Rating Section */}
+          <div className="border-t border-[#3d3555] pt-3 sm:pt-4 mt-3 sm:mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm text-gray-400">تقييم مدير العلاقة</span>
+              {existingRating && !showRatingForm && (
+                <button
+                  onClick={() => setShowRatingForm(true)}
+                  className="text-xs text-purple-400 hover:text-purple-300"
+                >
+                  تعديل
+                </button>
+              )}
+            </div>
+            
+            {showRatingForm || !existingRating ? (
+              <div className="space-y-3">
+                {/* Stars */}
+                <div className="flex items-center justify-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setUserRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="p-1 transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={`h-7 w-7 sm:h-8 sm:w-8 ${
+                          star <= (hoverRating || userRating)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-500'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Comment */}
+                <textarea
+                  className="w-full px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-purple-500 resize-none"
+                  rows={2}
+                  placeholder="أضف تعليقاً (اختياري)..."
+                  value={ratingComment}
+                  onChange={(e) => setRatingComment(e.target.value)}
+                />
+                
+                {/* Submit Button */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSubmitRating}
+                    disabled={submittingRating || userRating === 0}
+                    className="flex-1 py-2 bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-medium text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    {submittingRating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Star className="h-4 w-4" />
+                        {existingRating ? 'تحديث التقييم' : 'إرسال التقييم'}
+                      </>
+                    )}
+                  </button>
+                  {showRatingForm && existingRating && (
+                    <button
+                      onClick={() => {
+                        setShowRatingForm(false)
+                        setUserRating(existingRating.rating)
+                        setRatingComment(existingRating.comment || '')
+                      }}
+                      className="px-4 py-2 bg-[#3d3555] hover:bg-[#4d4565] text-white text-sm rounded-lg"
+                    >
+                      إلغاء
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`h-6 w-6 ${
+                      star <= existingRating.rating
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-500'
+                    }`}
+                  />
+                ))}
+                <span className="text-sm text-gray-400 mr-2">({existingRating.rating}/5)</span>
+              </div>
+            )}
           </div>
         </div>
 
