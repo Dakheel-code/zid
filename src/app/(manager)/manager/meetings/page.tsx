@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface Meeting {
   id: string
@@ -34,10 +35,37 @@ export default function ManagerMeetingsPage() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'settings' | 'availability' | 'timeoff'>('upcoming')
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [availabilityRules, setAvailabilityRules] = useState<AvailabilityRule[]>([])
-  const [bookingSlug, setBookingSlug] = useState<string>('mohammed-ali')
+  const [bookingSlug, setBookingSlug] = useState<string>('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const fetchUserSlug = async () => {
+      try {
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, name')
+            .eq('id', user.id)
+            .single()
+          
+          if (profile) {
+            // Generate slug from email (before @)
+            const emailSlug = profile.email.split('@')[0].replace(/\./g, '-')
+            setBookingSlug(emailSlug)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+    
+    fetchUserSlug()
+    
     // TODO: Fetch from API
     const mockMeetings: Meeting[] = [
       {
