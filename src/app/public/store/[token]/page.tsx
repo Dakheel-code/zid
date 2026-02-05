@@ -501,25 +501,23 @@ export default function PublicStorePage() {
             </h2>
           </div>
           
-          {/* Comments List */}
-          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-48 sm:max-h-64 overflow-y-auto">
+          {/* Comments List - WhatsApp Style */}
+          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-48 sm:max-h-64 overflow-y-auto bg-[#0b141a] rounded-lg mx-3 sm:mx-4 mt-3">
             {comments.length > 0 ? (
               comments.map((comment) => (
                 <div 
                   key={comment.id} 
-                  className={`p-2.5 sm:p-3 rounded-lg ${
+                  className={`max-w-[85%] p-2.5 sm:p-3 rounded-lg relative ${
                     comment.sender_type === 'merchant' 
-                      ? 'bg-[#1a1230] mr-4 sm:mr-8' 
-                      : 'bg-purple-600/20 ml-4 sm:ml-8'
+                      ? 'bg-[#075e54] mr-auto rounded-tl-none' 
+                      : 'bg-[#374151] ml-auto rounded-tr-none'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-[10px] sm:text-xs font-medium ${
-                      comment.sender_type === 'merchant' ? 'text-gray-400' : 'text-purple-400'
-                    }`}>
-                      {comment.sender_type === 'merchant' ? comment.sender_name : 'مدير العلاقة'}
+                  <div className="flex items-center justify-between mb-1 gap-2">
+                    <span className="text-[10px] sm:text-xs font-medium text-white/80">
+                      {comment.sender_type === 'merchant' ? 'أنت' : 'مدير العلاقة'}
                     </span>
-                    <span className="text-[10px] sm:text-xs text-gray-500">
+                    <span className="text-[10px] text-white/60">
                       {new Date(comment.created_at).toLocaleDateString('ar-SA', { 
                         month: 'short', 
                         day: 'numeric',
@@ -532,7 +530,7 @@ export default function PublicStorePage() {
                 </div>
               ))
             ) : (
-              <p className="text-center text-gray-500 py-4 text-sm">لا توجد ملاحظات بعد</p>
+              <p className="text-center text-white/50 py-6 text-sm">لا توجد ملاحظات بعد</p>
             )}
           </div>
           

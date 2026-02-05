@@ -832,25 +832,23 @@ export default function StoreDetailsPage() {
         {/* Content - Collapsible */}
         {commentsExpanded && (
           <div className="px-5 pb-5">
-            {/* Comments List */}
-            <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
+            {/* Comments List - WhatsApp Style */}
+            <div className="space-y-3 max-h-80 overflow-y-auto mb-4 p-3 bg-[#0b141a] rounded-lg">
               {comments.length > 0 ? (
                 comments.map((comment) => (
                   <div 
                     key={comment.id} 
-                    className={`p-3 rounded-lg ${
+                    className={`max-w-[80%] p-3 rounded-lg relative ${
                       comment.sender_type === 'merchant' 
-                        ? 'bg-orange-500/10 border border-orange-500/30 mr-8' 
-                        : 'bg-purple-500/10 border border-purple-500/30 ml-8'
+                        ? 'bg-[#374151] ml-auto rounded-tr-none' 
+                        : 'bg-[#075e54] mr-auto rounded-tl-none'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`text-xs font-medium ${
-                        comment.sender_type === 'merchant' ? 'text-orange-400' : 'text-purple-400'
-                      }`}>
-                        {comment.sender_type === 'merchant' ? `التاجر: ${comment.sender_name}` : 'أنت'}
+                    <div className="flex items-center justify-between mb-1 gap-4">
+                      <span className="text-xs font-medium text-white/80">
+                        {comment.sender_type === 'merchant' ? `${comment.sender_name}` : 'أنت'}
                       </span>
-                      <span className="text-xs text-[#8b7fad]">
+                      <span className="text-[10px] text-white/60">
                         {new Date(comment.created_at).toLocaleDateString('ar-SA', { 
                           month: 'short', 
                           day: 'numeric',
@@ -863,7 +861,7 @@ export default function StoreDetailsPage() {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-[#8b7fad] py-4">لا توجد تعليقات بعد</p>
+                <p className="text-center text-white/50 py-8">لا توجد تعليقات بعد</p>
               )}
             </div>
             

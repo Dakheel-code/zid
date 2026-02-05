@@ -440,25 +440,23 @@ export default function ManagerStoreDetailPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Comments List */}
-          <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
+          {/* Comments List - WhatsApp Style */}
+          <div className="space-y-3 max-h-80 overflow-y-auto mb-4 p-3 bg-[#0b141a] rounded-lg">
             {comments.length > 0 ? (
               comments.map((comment) => (
                 <div 
                   key={comment.id} 
-                  className={`p-3 rounded-lg ${
+                  className={`max-w-[80%] p-3 rounded-lg relative ${
                     comment.sender_type === 'merchant' 
-                      ? 'bg-orange-50 border border-orange-200 mr-8' 
-                      : 'bg-purple-50 border border-purple-200 ml-8'
+                      ? 'bg-[#374151] ml-auto rounded-tr-none' 
+                      : 'bg-[#075e54] mr-auto rounded-tl-none'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs font-medium ${
-                      comment.sender_type === 'merchant' ? 'text-orange-600' : 'text-purple-600'
-                    }`}>
-                      {comment.sender_type === 'merchant' ? `التاجر: ${comment.sender_name}` : 'أنت'}
+                  <div className="flex items-center justify-between mb-1 gap-4">
+                    <span className="text-xs font-medium text-white/80">
+                      {comment.sender_type === 'merchant' ? `${comment.sender_name}` : 'أنت'}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[10px] text-white/60">
                       {new Date(comment.created_at).toLocaleDateString('ar-SA', { 
                         month: 'short', 
                         day: 'numeric',
@@ -467,11 +465,11 @@ export default function ManagerStoreDetailPage() {
                       })}
                     </span>
                   </div>
-                  <p className="text-sm">{comment.content}</p>
+                  <p className="text-sm text-white">{comment.content}</p>
                 </div>
               ))
             ) : (
-              <p className="text-center text-muted-foreground py-4">لا توجد تعليقات بعد</p>
+              <p className="text-center text-white/50 py-8">لا توجد تعليقات بعد</p>
             )}
           </div>
           
