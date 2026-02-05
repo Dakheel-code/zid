@@ -71,19 +71,19 @@ export default function AdminAccountManagersPage() {
 
       if (error) throw error
 
-      // Get stores count for each manager
+      // جلب جميع بيانات المدراء بشكل متوازي
       const managersWithStats = await Promise.all(
         (data || []).map(async (manager: any) => {
-          // جلب المتاجر المسندة لهذا المدير
-          const { data: managerStores } = await supabase
-            .from('stores')
-            .select('id')
-            .eq('assigned_manager_id', manager.id)
+          // جلب المتاجر والتقييمات بشكل متوازي
+          const [storesRes, ratingsRes] = await Promise.all([
+            supabase.from('stores').select('id').eq('assigned_manager_id', manager.id),
+            supabase.from('manager_ratings').select('rating').eq('manager_id', manager.id)
+          ])
 
-          const storesCount = managerStores?.length || 0
-          const storeIds = managerStores?.map(s => s.id) || []
+          const storeIds = storesRes.data?.map(s => s.id) || []
+          const storesCount = storeIds.length
 
-          // جلب المهام النشطة فقط للمتاجر المسندة لهذا المدير
+          // جلب المهام النشطة فقط إذا كان هناك متاجر
           let tasksCount = 0
           if (storeIds.length > 0) {
             const { count } = await supabase
@@ -94,15 +94,11 @@ export default function AdminAccountManagersPage() {
             tasksCount = count || 0
           }
 
-          // جلب متوسط التقييم
-          const { data: ratingData } = await supabase
-            .from('manager_ratings')
-            .select('rating')
-            .eq('manager_id', manager.id)
-          
+          // حساب متوسط التقييم
+          const ratingData = ratingsRes.data || []
           let averageRating = null
           let totalRatings = 0
-          if (ratingData && ratingData.length > 0) {
+          if (ratingData.length > 0) {
             totalRatings = ratingData.length
             const sum = ratingData.reduce((acc, r) => acc + r.rating, 0)
             averageRating = Math.round((sum / totalRatings) * 10) / 10

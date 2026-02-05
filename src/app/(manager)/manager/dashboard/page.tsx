@@ -59,65 +59,43 @@ export default function ManagerDashboardPage() {
         if (!user) return
 
         const today = new Date().toISOString().split('T')[0]
+        const now = new Date().toISOString()
 
-        // جلب عدد المتاجر المسندة
-        const { count: assignedStores } = await supabase
+        // جلب المتاجر المسندة للمدير
+        const { data: storesData } = await supabase
           .from('stores')
-          .select('*', { count: 'exact', head: true })
+          .select('id, status')
           .eq('assigned_manager_id', user.id)
 
-        // جلب عدد المتاجر النشطة
-        const { count: activeStores } = await supabase
-          .from('stores')
-          .select('*', { count: 'exact', head: true })
-          .eq('assigned_manager_id', user.id)
-          .eq('status', 'active')
+        const storeIds = storesData?.map(s => s.id) || []
+        const assignedStores = storesData?.length || 0
+        const activeStores = storesData?.filter(s => s.status === 'active').length || 0
 
-        // جلب عدد المهام المعلقة
-        const { count: pendingTasks } = await supabase
-          .from('tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('assigned_user_id', user.id)
-          .in('status', ['pending', 'in_progress'])
-
-        // جلب المهام المتأخرة
-        const { data: overdueTasksData, count: overdueCount } = await supabase
-          .from('tasks')
-          .select('id, title, due_date, status', { count: 'exact' })
-          .eq('assigned_user_id', user.id)
-          .lt('due_date', today)
-          .neq('status', 'completed')
-          .order('due_date', { ascending: true })
-          .limit(5)
-
-        // جلب الاجتماعات القادمة
-        const { data: meetingsData, count: meetingsCount } = await supabase
-          .from('meetings')
-          .select('id, guest_name, start_at', { count: 'exact' })
-          .eq('manager_id', user.id)
-          .gte('start_at', new Date().toISOString())
-          .order('start_at', { ascending: true })
-          .limit(5)
-
-        // جلب المهام المكتملة اليوم
-        const { count: completedToday } = await supabase
-          .from('tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('assigned_user_id', user.id)
-          .eq('status', 'completed')
-          .gte('updated_at', today)
+        // جلب جميع البيانات بشكل متوازي
+        const [pendingTasksRes, overdueTasksRes, meetingsRes, completedTodayRes] = await Promise.all([
+          storeIds.length > 0 
+            ? supabase.from('store_tasks').select('*', { count: 'exact', head: true }).in('store_id', storeIds).in('status', ['new', 'in_progress'])
+            : Promise.resolve({ count: 0 }),
+          storeIds.length > 0
+            ? supabase.from('store_tasks').select('id, title, due_date, status', { count: 'exact' }).in('store_id', storeIds).lt('due_date', today).in('status', ['new', 'in_progress']).order('due_date', { ascending: true }).limit(5)
+            : Promise.resolve({ data: [], count: 0 }),
+          supabase.from('meetings').select('id, guest_name, scheduled_at', { count: 'exact' }).eq('manager_id', user.id).gte('scheduled_at', now).order('scheduled_at', { ascending: true }).limit(5),
+          storeIds.length > 0
+            ? supabase.from('store_tasks').select('*', { count: 'exact', head: true }).in('store_id', storeIds).eq('status', 'done').gte('updated_at', today)
+            : Promise.resolve({ count: 0 })
+        ])
 
         setStats({
-          assigned_stores: assignedStores || 0,
-          active_stores: activeStores || 0,
-          pending_tasks: pendingTasks || 0,
-          overdue_tasks: overdueCount || 0,
-          upcoming_meetings: meetingsCount || 0,
-          completed_today: completedToday || 0
+          assigned_stores: assignedStores,
+          active_stores: activeStores,
+          pending_tasks: pendingTasksRes.count || 0,
+          overdue_tasks: overdueTasksRes.count || 0,
+          upcoming_meetings: meetingsRes.count || 0,
+          completed_today: completedTodayRes.count || 0
         })
 
-        setOverdueTasks(overdueTasksData || [])
-        setUpcomingMeetings(meetingsData || [])
+        setOverdueTasks(overdueTasksRes.data || [])
+        setUpcomingMeetings((meetingsRes.data || []).map((m: any) => ({ ...m, start_at: m.scheduled_at })))
 
       } catch (error) {
         console.error('Error fetching stats:', error)

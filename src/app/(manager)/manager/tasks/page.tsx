@@ -66,44 +66,39 @@ export default function TasksPage() {
         if (!user) return
 
         // جلب المتاجر التابعة للمدير
-        const { data: storesData, error: storesError } = await supabase
+        const { data: storesData } = await supabase
           .from('stores')
           .select('id, store_name')
           .eq('assigned_manager_id', user.id)
           .order('store_name')
 
-        if (storesData && !storesError) {
+        if (storesData) {
           setStores(storesData)
-        }
+          
+          // جلب المهام من store_tasks للمتاجر المسندة
+          const storeIds = storesData.map(s => s.id)
+          if (storeIds.length > 0) {
+            const { data: tasksData } = await supabase
+              .from('store_tasks')
+              .select('id, title, description, status, due_date, store_id')
+              .in('store_id', storeIds)
+              .order('due_date', { ascending: true })
 
-        // جلب المهام
-        const { data: tasksData, error: tasksError } = await supabase
-          .from('tasks')
-          .select(`
-            id,
-            title,
-            description,
-            status,
-            priority,
-            due_date,
-            store_id,
-            stores (store_name)
-          `)
-          .eq('assigned_user_id', user.id)
-          .order('due_date', { ascending: true })
-
-        if (tasksData && !tasksError) {
-          const formattedTasks: Task[] = tasksData.map((task: any) => ({
-            id: task.id,
-            title: task.title,
-            description: task.description || '',
-            status: task.status || 'pending',
-            priority: task.priority || 'medium',
-            dueDate: task.due_date || '',
-            storeName: task.stores?.store_name || 'غير محدد',
-            storeId: task.store_id
-          }))
-          setTasks(formattedTasks)
+            if (tasksData) {
+              const storeMap = new Map(storesData.map(s => [s.id, s.store_name]))
+              const formattedTasks: Task[] = tasksData.map((task: any) => ({
+                id: task.id,
+                title: task.title,
+                description: task.description || '',
+                status: task.status === 'done' ? 'completed' : task.status === 'new' ? 'pending' : task.status,
+                priority: 'medium',
+                dueDate: task.due_date || '',
+                storeName: storeMap.get(task.store_id) || '',
+                storeId: task.store_id
+              }))
+              setTasks(formattedTasks)
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -129,39 +124,30 @@ export default function TasksPage() {
       if (!user) return
 
       const { data, error } = await supabase
-        .from('tasks')
+        .from('store_tasks')
         .insert({
           title: newTask.title,
           description: newTask.description,
-          priority: newTask.priority,
           due_date: newTask.dueDate || null,
           store_id: newTask.storeId,
-          assigned_user_id: user.id,
-          status: 'pending'
+          created_by_id: user.id,
+          status: 'new'
         })
-        .select(`
-          id,
-          title,
-          description,
-          status,
-          priority,
-          due_date,
-          store_id,
-          stores (store_name)
-        `)
+        .select('id, title, description, status, due_date, store_id')
         .single()
 
       if (error) throw error
 
       if (data) {
+        const store = stores.find(s => s.id === data.store_id)
         const formattedTask: Task = {
           id: data.id,
           title: data.title,
           description: data.description || '',
-          status: data.status || 'pending',
-          priority: data.priority || 'medium',
+          status: 'pending',
+          priority: 'medium',
           dueDate: data.due_date || '',
-          storeName: (data as any).stores?.store_name || 'غير محدد',
+          storeName: store?.store_name || 'غير محدد',
           storeId: data.store_id
         }
         setTasks([formattedTask, ...tasks])

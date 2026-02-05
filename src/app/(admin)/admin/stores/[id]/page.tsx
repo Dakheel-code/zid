@@ -230,11 +230,14 @@ export default function StoreDetailsPage() {
       }
     }
     
-    fetchStore()
-    fetchManagers()
-    fetchMeetings()
-    fetchActivityLog(1)
-    fetchComments()
+    // جلب جميع البيانات بشكل متوازي
+    Promise.all([
+      fetchStore(),
+      fetchManagers(),
+      fetchMeetings(),
+      fetchActivityLog(1),
+      fetchComments()
+    ])
   }, [storeId])
   
   // إرسال تعليق من المدير/الإدارة

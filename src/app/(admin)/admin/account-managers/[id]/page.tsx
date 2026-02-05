@@ -118,38 +118,35 @@ export default function ManagerDetailsPage() {
     async function fetchManagerData() {
       setLoading(true)
       try {
-        // جلب بيانات المدير
-        const { data: managerData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', managerId)
-          .single()
+        const now = new Date()
+        
+        // جلب جميع البيانات الأساسية بشكل متوازي
+        const [managerRes, storesRes, totalMeetingsRes, upcomingMeetingsRes, meetingsListRes, ratingsRes] = await Promise.all([
+          supabase.from('profiles').select('*').eq('id', managerId).single(),
+          supabase.from('stores').select('id, status, store_name, store_url, created_at').eq('assigned_manager_id', managerId),
+          supabase.from('meetings').select('*', { count: 'exact', head: true }).eq('manager_id', managerId),
+          supabase.from('meetings').select('*', { count: 'exact', head: true }).eq('manager_id', managerId).eq('status', 'scheduled').gte('scheduled_at', now.toISOString()),
+          supabase.from('meetings').select('id, guest_name, guest_email, guest_phone, store_url, scheduled_at, status, store_id').eq('manager_id', managerId).eq('status', 'scheduled').gte('scheduled_at', now.toISOString()).order('scheduled_at', { ascending: true }).limit(5),
+          supabase.from('manager_ratings').select('id, rating, comment, created_at, store_id').eq('manager_id', managerId).order('created_at', { ascending: false })
+        ])
 
-        if (managerData) {
-          setManager(managerData)
+        // تعيين بيانات المدير
+        if (managerRes.data) setManager(managerRes.data)
+
+        // معالجة المتاجر
+        const stores = storesRes.data || []
+        const storeStats = {
+          total_stores: stores.length,
+          active_stores: stores.filter(s => s.status === 'active').length,
+          paused_stores: stores.filter(s => s.status === 'paused').length,
+          ended_stores: stores.filter(s => s.status === 'ended').length,
         }
+        setRecentStores(stores.slice(0, 5))
 
-        // جلب إحصائيات المتاجر
-        const { data: stores } = await supabase
-          .from('stores')
-          .select('id, status, store_name, store_url, created_at')
-          .eq('assigned_manager_id', managerId)
-
-        if (stores) {
-          const storeStats = {
-            total_stores: stores.length,
-            active_stores: stores.filter(s => s.status === 'active').length,
-            paused_stores: stores.filter(s => s.status === 'paused').length,
-            ended_stores: stores.filter(s => s.status === 'ended').length,
-          }
-          setStats(prev => ({ ...prev, ...storeStats }))
-          
-          // آخر 5 متاجر
-          setRecentStores(stores.slice(0, 5))
-        }
-
-        // جلب إحصائيات المهام
-        const storeIds = stores?.map(s => s.id) || []
+        // جلب المهام إذا كان هناك متاجر
+        const storeIds = stores.map(s => s.id)
+        let taskStats = { total_tasks: 0, completed_tasks: 0, pending_tasks: 0, overdue_tasks: 0 }
+        
         if (storeIds.length > 0) {
           const { data: tasks } = await supabase
             .from('store_tasks')
@@ -157,89 +154,39 @@ export default function ManagerDetailsPage() {
             .in('store_id', storeIds)
 
           if (tasks) {
-            const now = new Date()
-            const taskStats = {
+            taskStats = {
               total_tasks: tasks.length,
               completed_tasks: tasks.filter(t => t.status === 'done').length,
               pending_tasks: tasks.filter(t => ['new', 'in_progress'].includes(t.status)).length,
-              overdue_tasks: tasks.filter(t => 
-                t.due_date && new Date(t.due_date) < now && t.status !== 'done'
-              ).length,
+              overdue_tasks: tasks.filter(t => t.due_date && new Date(t.due_date) < now && t.status !== 'done').length,
             }
-            setStats(prev => ({ ...prev, ...taskStats }))
-
-            // آخر 5 مهام
-            const recentTasksWithStore = tasks.slice(0, 5).map(task => {
-              const store = stores?.find(s => s.id === task.store_id)
-              return {
-                ...task,
-                store_name: store?.store_name || store?.store_url || null
-              }
-            })
-            setRecentTasks(recentTasksWithStore)
+            setRecentTasks(tasks.slice(0, 5).map(task => ({
+              ...task,
+              store_name: stores.find(s => s.id === task.store_id)?.store_name || null
+            })))
           }
         }
 
-        // جلب إحصائيات الاجتماعات
-        const { count: totalMeetings } = await supabase
-          .from('meetings')
-          .select('*', { count: 'exact', head: true })
-          .eq('manager_id', managerId)
+        // تحديث الإحصائيات
+        setStats({
+          ...storeStats,
+          ...taskStats,
+          total_meetings: totalMeetingsRes.count || 0,
+          upcoming_meetings: upcomingMeetingsRes.count || 0
+        })
 
-        const { count: upcomingMeetings } = await supabase
-          .from('meetings')
-          .select('*', { count: 'exact', head: true })
-          .eq('manager_id', managerId)
-          .eq('status', 'scheduled')
-          .gte('scheduled_at', new Date().toISOString())
+        // الاجتماعات القادمة
+        if (meetingsListRes.data) setUpcomingMeetings(meetingsListRes.data)
 
-        setStats(prev => ({
-          ...prev,
-          total_meetings: totalMeetings || 0,
-          upcoming_meetings: upcomingMeetings || 0
-        }))
-
-        // جلب قائمة الاجتماعات القادمة
-        const { data: meetingsData } = await supabase
-          .from('meetings')
-          .select('id, guest_name, guest_email, guest_phone, store_url, scheduled_at, status, store_id')
-          .eq('manager_id', managerId)
-          .eq('status', 'scheduled')
-          .gte('scheduled_at', new Date().toISOString())
-          .order('scheduled_at', { ascending: true })
-          .limit(5)
-
-        if (meetingsData) {
-          setUpcomingMeetings(meetingsData)
-        }
-
-        // جلب التقييمات مع اسم المتجر
-        const { data: ratingsData } = await supabase
-          .from('manager_ratings')
-          .select('id, rating, comment, created_at, store_id')
-          .eq('manager_id', managerId)
-          .order('created_at', { ascending: false })
-
-        if (ratingsData && ratingsData.length > 0) {
-          // جلب أسماء المتاجر
-          const storeIds = ratingsData.map(r => r.store_id)
-          const { data: storesData } = await supabase
-            .from('stores')
-            .select('id, store_name')
-            .in('id', storeIds)
-
+        // معالجة التقييمات
+        const ratingsData = ratingsRes.data || []
+        if (ratingsData.length > 0) {
+          const ratingStoreIds = ratingsData.map(r => r.store_id)
+          const { data: storesData } = await supabase.from('stores').select('id, store_name').in('id', ratingStoreIds)
           const storeMap = new Map(storesData?.map(s => [s.id, s.store_name]) || [])
           
-          const ratingsWithStores = ratingsData.map(r => ({
-            ...r,
-            store_name: storeMap.get(r.store_id) || 'متجر غير معروف'
-          }))
-          
-          setRatings(ratingsWithStores)
-          
-          // حساب المتوسط
-          const sum = ratingsData.reduce((acc, r) => acc + r.rating, 0)
-          setAverageRating(Math.round((sum / ratingsData.length) * 10) / 10)
+          setRatings(ratingsData.map(r => ({ ...r, store_name: storeMap.get(r.store_id) || 'متجر غير معروف' })))
+          setAverageRating(Math.round((ratingsData.reduce((acc, r) => acc + r.rating, 0) / ratingsData.length) * 10) / 10)
         }
 
       } catch (err) {
@@ -248,9 +195,7 @@ export default function ManagerDetailsPage() {
       setLoading(false)
     }
 
-    if (managerId) {
-      fetchManagerData()
-    }
+    if (managerId) fetchManagerData()
   }, [managerId])
 
   const getStatusColor = (status: string) => {
