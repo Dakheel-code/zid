@@ -12,12 +12,15 @@ import {
   ArrowRight,
   RefreshCw,
   Link2,
-  Copy
+  Copy,
+  Plus,
+  Loader2
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import type { Store as StoreType, StoreTask } from '@/lib/supabase/types-simple'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function ManagerStoreDetailPage() {
   const params = useParams()
@@ -27,96 +30,65 @@ export default function ManagerStoreDetailPage() {
   const [tasks, setTasks] = useState<StoreTask[]>([])
   const [publicToken, setPublicToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [creatingToken, setCreatingToken] = useState(false)
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   useEffect(() => {
-    // TODO: Fetch store and tasks from API
-    const mockStore: StoreType = {
-      id: storeId,
-      store_url: 'https://example.zid.store',
-      store_name: 'متجر الإلكترونيات',
-      store_logo_url: null,
-      owner_name: 'أحمد محمد',
-      owner_email: 'ahmed@example.com',
-      owner_phone: '+966501234567',
-      priority: 'high',
-      status: 'active',
-      ended_at: null,
-      public_access_expires_at: null,
-      assigned_manager_id: '1',
-      created_by_admin_id: '1',
-      notes: null,
-      metadata: {},
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-    
-    const mockTasks: StoreTask[] = [
-      {
-        id: '1',
-        store_id: storeId,
-        template_task_id: '1',
-        template_section_id: '1',
-        type: 'template',
-        title: 'مراجعة إعدادات المتجر',
-        description: 'التأكد من إعدادات المتجر الأساسية',
-        section_title: 'إعداد المتجر',
-        status: 'done',
-        due_date: null,
-        completed_at: new Date().toISOString(),
-        created_by_id: '1',
-        created_by_role: 'system',
-        visible_to_merchant: true,
-        notes: null,
-        sort_order: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        store_id: storeId,
-        template_task_id: '2',
-        template_section_id: '1',
-        type: 'template',
-        title: 'إضافة طرق الدفع',
-        description: null,
-        section_title: 'إعداد المتجر',
-        status: 'in_progress',
-        due_date: null,
-        completed_at: null,
-        created_by_id: null,
-        created_by_role: 'system',
-        visible_to_merchant: true,
-        notes: null,
-        sort_order: 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: '3',
-        store_id: storeId,
-        template_task_id: null,
-        template_section_id: null,
-        type: 'manual',
-        title: 'طلب من التاجر: تحسين الصور',
-        description: 'التاجر يريد تحسين صور المنتجات',
-        section_title: undefined,
-        status: 'new',
-        due_date: null,
-        completed_at: null,
-        created_by_id: null,
-        created_by_role: 'merchant',
-        visible_to_merchant: true,
-        notes: null,
-        sort_order: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+    const fetchStoreData = async () => {
+      try {
+        // جلب بيانات المتجر الفعلية
+        const { data: storeData, error: storeError } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('id', storeId)
+          .single()
+
+        if (storeError) {
+          console.error('Error fetching store:', storeError)
+          setLoading(false)
+          return
+        }
+
+        if (storeData) {
+          setStore(storeData)
+          
+          // جلب public token إذا كان موجوداً
+          const { data: tokenData } = await supabase
+            .from('store_public_tokens')
+            .select('token')
+            .eq('store_id', storeId)
+            .single()
+          
+          if (tokenData) {
+            setPublicToken(tokenData.token)
+          }
+        }
+
+        // جلب مهام المتجر
+        const { data: tasksData, error: tasksError } = await supabase
+          .from('store_tasks')
+          .select('*')
+          .eq('store_id', storeId)
+          .order('sort_order', { ascending: true })
+
+        if (tasksData && !tasksError) {
+          setTasks(tasksData)
+        }
+
+      } catch (error) {
+        console.error('Error fetching store data:', error)
+      } finally {
+        setLoading(false)
       }
-    ]
-    
-    setStore(mockStore)
-    setTasks(mockTasks)
-    setPublicToken('abc123xyz789')
-    setLoading(false)
+    }
+
+    if (storeId) {
+      fetchStoreData()
+    }
   }, [storeId])
 
   const getStatusBadge = (status: string) => {
@@ -142,6 +114,36 @@ export default function ManagerStoreDetailPage() {
   const copyPublicLink = () => {
     if (publicToken) {
       navigator.clipboard.writeText(`${window.location.origin}/public/store/${publicToken}`)
+    }
+  }
+
+  const createPublicToken = async () => {
+    setCreatingToken(true)
+    try {
+      // إنشاء توكن عشوائي
+      const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+      
+      const { data, error } = await supabase
+        .from('store_public_tokens')
+        .insert({
+          store_id: storeId,
+          token: token,
+          expires_at: null
+        })
+        .select('token')
+        .single()
+
+      if (error) {
+        console.error('Error creating token:', error)
+        // إذا كان الجدول غير موجود، نستخدم التوكن مباشرة
+        setPublicToken(token)
+      } else if (data) {
+        setPublicToken(data.token)
+      }
+    } catch (error) {
+      console.error('Error creating public token:', error)
+    } finally {
+      setCreatingToken(false)
     }
   }
 
@@ -236,20 +238,49 @@ export default function ManagerStoreDetailPage() {
           </div>
 
           {/* Public Link */}
-          {publicToken && (
-            <div className="mt-4 p-3 bg-muted rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Link2 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">رابط صفحة التاجر:</span>
-                <code className="text-xs bg-background px-2 py-1 rounded">
-                  /public/store/{publicToken}
-                </code>
-              </div>
-              <Button variant="ghost" size="sm" onClick={copyPublicLink}>
-                <Copy className="h-4 w-4" />
-              </Button>
+          <div className="mt-4 p-4 bg-muted rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Link2 className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">رابط صفحة التاجر</span>
             </div>
-          )}
+            {publicToken ? (
+              <div className="flex items-center justify-between gap-2 bg-background p-2 rounded-lg">
+                <code className="text-sm text-primary truncate flex-1">
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/public/store/{publicToken}
+                </code>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={copyPublicLink}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <a 
+                    href={`/public/store/${publicToken}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="ghost" size="sm">
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">لم يتم إنشاء رابط عام بعد</span>
+                <Button 
+                  onClick={createPublicToken} 
+                  disabled={creatingToken}
+                  size="sm"
+                >
+                  {creatingToken ? (
+                    <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4 ml-2" />
+                  )}
+                  إنشاء رابط
+                </Button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

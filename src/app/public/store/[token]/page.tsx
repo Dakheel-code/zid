@@ -124,38 +124,34 @@ export default function PublicStorePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#1a1230]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
       </div>
     )
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="p-8 text-center">
-            <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
-            <h2 className="text-xl font-bold mb-2">خطأ</h2>
-            <p className="text-muted-foreground">{error || 'الصفحة غير موجودة'}</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-[#1a1230]">
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl max-w-md w-full mx-4 p-8 text-center">
+          <AlertTriangle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+          <h2 className="text-xl font-bold mb-2 text-white">خطأ</h2>
+          <p className="text-gray-400">{error || 'الصفحة غير موجودة'}</p>
+        </div>
       </div>
     )
   }
 
   if (data.is_expired) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="p-8 text-center">
-            <Clock className="h-12 w-12 mx-auto text-amber-500 mb-4" />
-            <h2 className="text-xl font-bold mb-2">انتهت صلاحية الوصول</h2>
-            <p className="text-muted-foreground">
-              انتهت صلاحية الوصول لهذه الصفحة. يرجى التواصل مع مدير العلاقة للحصول على رابط جديد.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-[#1a1230]">
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl max-w-md w-full mx-4 p-8 text-center">
+          <Clock className="h-12 w-12 mx-auto text-amber-500 mb-4" />
+          <h2 className="text-xl font-bold mb-2 text-white">انتهت صلاحية الوصول</h2>
+          <p className="text-gray-400">
+            انتهت صلاحية الوصول لهذه الصفحة. يرجى التواصل مع مدير العلاقة للحصول على رابط جديد.
+          </p>
+        </div>
       </div>
     )
   }
@@ -165,146 +161,127 @@ export default function PublicStorePage() {
   const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-[#1a1230]" dir="rtl">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
+      <header className="bg-[#1a1230] border-b border-[#3d3555] sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-              {data.store.store_logo_url ? (
-                <img 
-                  src={data.store.store_logo_url} 
-                  alt={data.store.store_name || ''} 
-                  className="w-full h-full object-cover rounded-lg"
-                />
-              ) : (
-                <Store className="h-6 w-6 text-primary" />
-              )}
-            </div>
-            <div>
-              <h1 className="font-bold text-lg">{data.store.store_name || 'متجرك'}</h1>
-              <p className="text-sm text-muted-foreground">صفحة متابعة المهام</p>
-            </div>
+          <div className="flex items-center justify-center gap-3">
+            <Store className="h-6 w-6 text-purple-400" />
+            <h1 className="font-bold text-lg text-white">صفحة متابعة المهام</h1>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         {/* Manager Card */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  {data.manager.avatar_url ? (
-                    <img 
-                      src={data.manager.avatar_url} 
-                      alt={data.manager.name || ''} 
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    <User className="h-6 w-6 text-primary" />
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">مدير العلاقة</p>
-                  <p className="font-semibold">{data.manager.name || 'مدير العلاقة'}</p>
-                </div>
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-[#3d3555] rounded-full flex items-center justify-center">
+                {data.manager.avatar_url ? (
+                  <img 
+                    src={data.manager.avatar_url} 
+                    alt={data.manager.name || ''} 
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <User className="h-6 w-6 text-purple-400" />
+                )}
               </div>
-              {data.manager.phone && (
-                <Button onClick={openWhatsApp} className="bg-green-600 hover:bg-green-700">
-                  <MessageCircle className="h-4 w-4 ml-2" />
-                  واتساب
-                </Button>
-              )}
+              <div>
+                <p className="text-sm text-gray-400">مدير العلاقة</p>
+                <p className="font-semibold text-white">{data.manager.name || 'مدير العلاقة'}</p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+            {data.manager.phone && (
+              <Button onClick={openWhatsApp} className="bg-green-600 hover:bg-green-700 text-white">
+                <MessageCircle className="h-4 w-4 ml-2" />
+                واتساب
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Progress Card */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-medium">تقدم المهام</span>
-              <span className="text-sm text-muted-foreground">
-                {completedTasks} من {totalTasks} مهمة
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-primary h-3 rounded-full transition-all"
-                style={{ width: `${progressPercent}%` }}
-              ></div>
-            </div>
-            <p className="text-center text-sm text-muted-foreground mt-2">
-              {progressPercent}% مكتمل
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="font-medium text-white">تقدم المهام</span>
+            <span className="text-sm text-gray-400">
+              {completedTasks} من {totalTasks} مهمة
+            </span>
+          </div>
+          <div className="w-full bg-[#1a1230] rounded-full h-3">
+            <div 
+              className="bg-gradient-to-r from-purple-600 to-purple-400 h-3 rounded-full transition-all"
+              style={{ width: `${progressPercent}%` }}
+            ></div>
+          </div>
+          <p className="text-center text-sm text-gray-400 mt-2">
+            {progressPercent}% مكتمل
+          </p>
+        </div>
 
         {/* Tasks List */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">المهام</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y">
-              {data.tasks.map((task) => (
-                <div key={task.id} className="p-4 flex items-center gap-3">
-                  {task.status === 'done' ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  ) : (
-                    <Clock className="h-5 w-5 text-amber-500 flex-shrink-0" />
+        <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-[#3d3555]">
+            <h2 className="text-lg font-bold text-white">المهام</h2>
+          </div>
+          <div className="divide-y divide-[#3d3555]">
+            {data.tasks.map((task) => (
+              <div key={task.id} className="p-4 flex items-center gap-3">
+                {task.status === 'done' ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                ) : (
+                  <Clock className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                )}
+                <div className="flex-1">
+                  <p className={task.status === 'done' ? 'line-through text-gray-500' : 'text-white'}>
+                    {task.title}
+                  </p>
+                  {task.section_title && (
+                    <p className="text-xs text-gray-500">{task.section_title}</p>
                   )}
-                  <div className="flex-1">
-                    <p className={task.status === 'done' ? 'line-through text-muted-foreground' : ''}>
-                      {task.title}
-                    </p>
-                    {task.section_title && (
-                      <p className="text-xs text-muted-foreground">{task.section_title}</p>
-                    )}
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    task.status === 'done' 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-amber-100 text-amber-700'
-                  }`}>
-                    {task.status === 'done' ? 'منجز' : 'قيد المتابعة'}
-                  </span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                  task.status === 'done' 
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                    : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                }`}>
+                  {task.status === 'done' ? 'منجز' : 'قيد المتابعة'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* New Task Form */}
         {!showTaskForm ? (
-          <Button 
+          <button 
             onClick={() => setShowTaskForm(true)} 
-            variant="secondary" 
-            className="w-full"
+            className="w-full py-3 border-2 border-dashed border-[#3d3555] rounded-2xl text-gray-400 hover:border-purple-500 hover:text-purple-400 transition-colors flex items-center justify-center gap-2"
           >
-            <Plus className="h-4 w-4 ml-2" />
+            <Plus className="h-4 w-4" />
             إرسال طلب جديد
-          </Button>
+          </button>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">طلب جديد</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="bg-[#2d2640] border border-[#3d3555] rounded-2xl overflow-hidden">
+            <div className="p-4 border-b border-[#3d3555]">
+              <h2 className="text-lg font-bold text-white">طلب جديد</h2>
+            </div>
+            <div className="p-4 space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">عنوان الطلب *</label>
-                <Input
+                <label className="text-sm font-medium mb-1 block text-gray-300">عنوان الطلب *</label>
+                <input
+                  className="w-full px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
                   placeholder="مثال: تحسين صور المنتجات"
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">التفاصيل</label>
+                <label className="text-sm font-medium mb-1 block text-gray-300">التفاصيل</label>
                 <textarea
-                  className="w-full px-3 py-2 border rounded-md text-sm"
+                  className="w-full px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500 resize-none"
                   rows={3}
                   placeholder="اكتب تفاصيل طلبك..."
                   value={newTask.description}
@@ -313,16 +290,18 @@ export default function PublicStorePage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">اسمك *</label>
-                  <Input
+                  <label className="text-sm font-medium mb-1 block text-gray-300">اسمك *</label>
+                  <input
+                    className="w-full px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
                     placeholder="الاسم"
                     value={newTask.name}
                     onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">رقم التواصل *</label>
-                  <Input
+                  <label className="text-sm font-medium mb-1 block text-gray-300">رقم التواصل *</label>
+                  <input
+                    className="w-full px-3 py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
                     placeholder="رقم الجوال أو البريد"
                     value={newTask.contact}
                     onChange={(e) => setNewTask({ ...newTask, contact: e.target.value })}
@@ -333,24 +312,25 @@ export default function PublicStorePage() {
                 <Button 
                   onClick={handleSubmitTask} 
                   disabled={submitting || !newTask.title || !newTask.name || !newTask.contact}
-                  className="flex-1"
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
                 >
                   {submitting ? 'جاري الإرسال...' : 'إرسال الطلب'}
                 </Button>
                 <Button 
                   variant="secondary" 
                   onClick={() => setShowTaskForm(false)}
+                  className="bg-[#3d3555] hover:bg-[#4d4565] text-white border-0"
                 >
                   إلغاء
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-6 text-sm text-muted-foreground">
+      <footer className="text-center py-6 text-sm text-gray-500">
         <p>نظام إدارة المتاجر - ZID Dashboard</p>
       </footer>
     </div>

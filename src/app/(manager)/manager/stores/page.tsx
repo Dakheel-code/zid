@@ -138,12 +138,12 @@ export default function ManagerStoresPage() {
                   <div>
                     <h3 className="font-semibold">{store.store_name || 'بدون اسم'}</h3>
                     <a 
-                      href={store.store_url} 
+                      href={store.store_url.startsWith('http') ? store.store_url : `https://${store.store_url}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
                     >
-                      {store.store_url}
+                      {store.store_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   </div>

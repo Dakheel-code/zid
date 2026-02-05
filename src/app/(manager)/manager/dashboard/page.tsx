@@ -10,6 +10,7 @@ import {
   TrendingUp
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface ManagerStats {
   assigned_stores: number
@@ -18,6 +19,19 @@ interface ManagerStats {
   overdue_tasks: number
   upcoming_meetings: number
   completed_today: number
+}
+
+interface Task {
+  id: string
+  title: string
+  due_date: string
+  status: string
+}
+
+interface Meeting {
+  id: string
+  guest_name: string
+  start_at: string
 }
 
 export default function ManagerDashboardPage() {
@@ -29,19 +43,90 @@ export default function ManagerDashboardPage() {
     upcoming_meetings: 0,
     completed_today: 0
   })
+  const [overdueTasks, setOverdueTasks] = useState<Task[]>([])
+  const [upcomingMeetings, setUpcomingMeetings] = useState<Meeting[]>([])
   const [loading, setLoading] = useState(true)
 
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   useEffect(() => {
-    // TODO: Fetch actual stats from API
-    setStats({
-      assigned_stores: 12,
-      active_stores: 10,
-      pending_tasks: 45,
-      overdue_tasks: 3,
-      upcoming_meetings: 2,
-      completed_today: 8
-    })
-    setLoading(false)
+    const fetchStats = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const today = new Date().toISOString().split('T')[0]
+
+        // جلب عدد المتاجر المسندة
+        const { count: assignedStores } = await supabase
+          .from('stores')
+          .select('*', { count: 'exact', head: true })
+          .eq('assigned_manager_id', user.id)
+
+        // جلب عدد المتاجر النشطة
+        const { count: activeStores } = await supabase
+          .from('stores')
+          .select('*', { count: 'exact', head: true })
+          .eq('assigned_manager_id', user.id)
+          .eq('status', 'active')
+
+        // جلب عدد المهام المعلقة
+        const { count: pendingTasks } = await supabase
+          .from('tasks')
+          .select('*', { count: 'exact', head: true })
+          .eq('assigned_user_id', user.id)
+          .in('status', ['pending', 'in_progress'])
+
+        // جلب المهام المتأخرة
+        const { data: overdueTasksData, count: overdueCount } = await supabase
+          .from('tasks')
+          .select('id, title, due_date, status', { count: 'exact' })
+          .eq('assigned_user_id', user.id)
+          .lt('due_date', today)
+          .neq('status', 'completed')
+          .order('due_date', { ascending: true })
+          .limit(5)
+
+        // جلب الاجتماعات القادمة
+        const { data: meetingsData, count: meetingsCount } = await supabase
+          .from('meetings')
+          .select('id, guest_name, start_at', { count: 'exact' })
+          .eq('manager_id', user.id)
+          .gte('start_at', new Date().toISOString())
+          .order('start_at', { ascending: true })
+          .limit(5)
+
+        // جلب المهام المكتملة اليوم
+        const { count: completedToday } = await supabase
+          .from('tasks')
+          .select('*', { count: 'exact', head: true })
+          .eq('assigned_user_id', user.id)
+          .eq('status', 'completed')
+          .gte('updated_at', today)
+
+        setStats({
+          assigned_stores: assignedStores || 0,
+          active_stores: activeStores || 0,
+          pending_tasks: pendingTasks || 0,
+          overdue_tasks: overdueCount || 0,
+          upcoming_meetings: meetingsCount || 0,
+          completed_today: completedToday || 0
+        })
+
+        setOverdueTasks(overdueTasksData || [])
+        setUpcomingMeetings(meetingsData || [])
+
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStats()
   }, [])
 
   const statCards = [
@@ -133,24 +218,27 @@ export default function ManagerDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {stats.overdue_tasks > 0 ? (
+            {overdueTasks.length > 0 ? (
               <div className="space-y-3">
-                {[1, 2, 3].slice(0, stats.overdue_tasks).map((i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                        <CheckSquare className="h-4 w-4 text-red-600" />
+                {overdueTasks.map((task) => {
+                  const daysOverdue = Math.floor((new Date().getTime() - new Date(task.due_date).getTime()) / (1000 * 60 * 60 * 24))
+                  return (
+                    <div key={task.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                          <CheckSquare className="h-4 w-4 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{task.title}</p>
+                          <p className="text-xs text-muted-foreground">متأخرة منذ {daysOverdue} يوم</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">مهمة {i}</p>
-                        <p className="text-xs text-muted-foreground">متأخرة منذ {i} يوم</p>
-                      </div>
+                      <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">
+                        متأخرة
+                      </span>
                     </div>
-                    <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-full">
-                      متأخرة
-                    </span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               <p className="text-center text-muted-foreground py-8">
@@ -168,24 +256,30 @@ export default function ManagerDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {stats.upcoming_meetings > 0 ? (
+            {upcomingMeetings.length > 0 ? (
               <div className="space-y-3">
-                {[1, 2].slice(0, stats.upcoming_meetings).map((i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Calendar className="h-4 w-4 text-purple-600" />
+                {upcomingMeetings.map((meeting) => {
+                  const meetingDate = new Date(meeting.start_at)
+                  const isToday = meetingDate.toDateString() === new Date().toDateString()
+                  const timeStr = meetingDate.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+                  const dateStr = isToday ? 'اليوم' : meetingDate.toLocaleDateString('ar-SA', { weekday: 'long' })
+                  return (
+                    <div key={meeting.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                          <Calendar className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{meeting.guest_name || 'اجتماع'}</p>
+                          <p className="text-xs text-muted-foreground">{dateStr} - {timeStr}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">اجتماع مع عميل {i}</p>
-                        <p className="text-xs text-muted-foreground">اليوم - 0{i}:00 م</p>
-                      </div>
+                      <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+                        قادم
+                      </span>
                     </div>
-                    <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
-                      قادم
-                    </span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               <p className="text-center text-muted-foreground py-8">
