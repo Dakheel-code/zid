@@ -90,9 +90,8 @@ export default function ComponentsShowcase() {
           <div className="flex flex-wrap gap-4">
             <Button variant="primary">Primary</Button>
             <Button variant="secondary">Secondary</Button>
-            <Button variant="outline">Outline</Button>
             <Button variant="ghost">Ghost</Button>
-            <Button variant="destructive">Destructive</Button>
+            <Button variant="danger">Danger</Button>
             <Button variant="primary" isLoading>Loading</Button>
             <Button variant="primary" leftIcon={Plus}>مع أيقونة</Button>
           </div>
@@ -123,12 +122,12 @@ export default function ComponentsShowcase() {
             <Badge variant="warning">Warning</Badge>
             <Badge variant="error">Error</Badge>
             <Badge variant="info">Info</Badge>
-            <Badge variant="outline">Outline</Badge>
+            <Badge variant="info">Info 2</Badge>
           </div>
           <div className="flex flex-wrap gap-4 mt-4">
             <Badge size="sm">Small</Badge>
             <Badge size="md">Medium</Badge>
-            <Badge size="lg">Large</Badge>
+            <Badge size="md">Medium 2</Badge>
           </div>
         </section>
 
@@ -145,7 +144,7 @@ export default function ComponentsShowcase() {
                 <p className="text-fg-secondary">محتوى البطاقة يظهر هنا</p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" size="sm">إلغاء</Button>
+                <Button variant="secondary" size="sm">إلغاء</Button>
                 <Button size="sm">حفظ</Button>
               </CardFooter>
             </Card>
@@ -240,7 +239,7 @@ export default function ComponentsShowcase() {
           <h2 className="text-heading-3 text-fg-primary mb-4">Modal & Drawer</h2>
           <div className="flex gap-4">
             <Button onClick={() => setIsModalOpen(true)}>فتح Modal</Button>
-            <Button variant="outline" onClick={() => setIsDrawerOpen(true)}>فتح Drawer</Button>
+            <Button variant="secondary" onClick={() => setIsDrawerOpen(true)}>فتح Drawer</Button>
           </div>
 
           <Modal
@@ -252,7 +251,7 @@ export default function ComponentsShowcase() {
             <p className="text-fg-secondary mb-4">محتوى النافذة المنبثقة يظهر هنا.</p>
             <Input placeholder="أدخل قيمة..." />
             <ModalFooter>
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>إلغاء</Button>
+              <Button variant="secondary" onClick={() => setIsModalOpen(false)}>إلغاء</Button>
               <Button onClick={() => setIsModalOpen(false)}>حفظ</Button>
             </ModalFooter>
           </Modal>
