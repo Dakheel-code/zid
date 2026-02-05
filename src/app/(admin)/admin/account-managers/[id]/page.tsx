@@ -17,7 +17,9 @@ import {
   BarChart3,
   Edit,
   ExternalLink,
-  Copy
+  Copy,
+  Star,
+  MessageSquare
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -73,6 +75,15 @@ interface Meeting {
   store_id: string | null
 }
 
+interface Rating {
+  id: string
+  rating: number
+  comment: string | null
+  created_at: string
+  store_name: string | null
+  store_id: string
+}
+
 export default function ManagerDetailsPage() {
   const params = useParams()
   const router = useRouter()
@@ -94,6 +105,8 @@ export default function ManagerDetailsPage() {
   const [recentStores, setRecentStores] = useState<RecentStore[]>([])
   const [recentTasks, setRecentTasks] = useState<RecentTask[]>([])
   const [upcomingMeetings, setUpcomingMeetings] = useState<Meeting[]>([])
+  const [ratings, setRatings] = useState<Rating[]>([])
+  const [averageRating, setAverageRating] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   const supabase = createBrowserClient(
@@ -198,6 +211,35 @@ export default function ManagerDetailsPage() {
 
         if (meetingsData) {
           setUpcomingMeetings(meetingsData)
+        }
+
+        // جلب التقييمات مع اسم المتجر
+        const { data: ratingsData } = await supabase
+          .from('manager_ratings')
+          .select('id, rating, comment, created_at, store_id')
+          .eq('manager_id', managerId)
+          .order('created_at', { ascending: false })
+
+        if (ratingsData && ratingsData.length > 0) {
+          // جلب أسماء المتاجر
+          const storeIds = ratingsData.map(r => r.store_id)
+          const { data: storesData } = await supabase
+            .from('stores')
+            .select('id, store_name')
+            .in('id', storeIds)
+
+          const storeMap = new Map(storesData?.map(s => [s.id, s.store_name]) || [])
+          
+          const ratingsWithStores = ratingsData.map(r => ({
+            ...r,
+            store_name: storeMap.get(r.store_id) || 'متجر غير معروف'
+          }))
+          
+          setRatings(ratingsWithStores)
+          
+          // حساب المتوسط
+          const sum = ratingsData.reduce((acc, r) => acc + r.rating, 0)
+          setAverageRating(Math.round((sum / ratingsData.length) * 10) / 10)
         }
 
       } catch (err) {
@@ -584,6 +626,70 @@ export default function ManagerDetailsPage() {
             </div>
           ) : (
             <p className="text-center text-gray-500 py-4">لا توجد مهام</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Ratings Section */}
+      <Card className="bg-[#2d2640] border-[#3d3555]">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+            تقييمات التجار
+            {averageRating && (
+              <span className="text-sm font-normal text-gray-400 mr-2">
+                (المتوسط: {averageRating}/5 من {ratings.length} تقييم)
+              </span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {ratings.length > 0 ? (
+            <div className="space-y-4">
+              {ratings.map((rating) => (
+                <div 
+                  key={rating.id}
+                  className="p-4 bg-[#1a1625] rounded-lg border border-[#3d3555]"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Store className="h-4 w-4 text-purple-400" />
+                      <span className="text-white font-medium">{rating.store_name}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= rating.rating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-600'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  {rating.comment && (
+                    <div className="flex items-start gap-2 mt-3 pt-3 border-t border-[#3d3555]">
+                      <MessageSquare className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-gray-300">{rating.comment}</p>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-2">
+                    {new Date(rating.created_at).toLocaleDateString('ar-SA', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Star className="h-12 w-12 mx-auto text-gray-600 mb-3" />
+              <p className="text-gray-500">لا توجد تقييمات بعد</p>
+            </div>
           )}
         </CardContent>
       </Card>
