@@ -159,6 +159,9 @@ export default function PublicStorePage() {
         
         setData(formattedData)
         
+        // تحديث عنوان الصفحة
+        document.title = `متابعة المهام | ${storeData.store_name || 'متجر'}`
+        
         // جلب التعليقات
         const { data: commentsData } = await supabase
           .from('store_comments')

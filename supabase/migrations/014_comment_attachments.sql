@@ -21,7 +21,16 @@ END $$;
 -- سياسات التخزين للمرفقات
 -- يجب تشغيلها في Supabase Dashboard > Storage > Policies
 
--- تفعيل Realtime للتعليقات
-ALTER PUBLICATION supabase_realtime ADD TABLE store_comments;
+-- تفعيل Realtime للتعليقات (إذا لم يكن مفعلاً)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' 
+        AND tablename = 'store_comments'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE store_comments;
+    END IF;
+END $$;
 
 SELECT 'تم إضافة دعم المرفقات بنجاح!' as message;
