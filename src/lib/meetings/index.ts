@@ -70,8 +70,8 @@ export function isSlotAvailable(
   slotEnd.setHours(endHour, endMinute, 0, 0)
 
   return !existingMeetings.some(meeting => {
-    const meetingStart = new Date(meeting.start_time)
-    const meetingEnd = new Date(meeting.end_time)
+    const meetingStart = new Date(meeting.start_at)
+    const meetingEnd = new Date(meeting.end_at)
     return (
       (slotStart >= meetingStart && slotStart < meetingEnd) ||
       (slotEnd > meetingStart && slotEnd <= meetingEnd) ||
@@ -81,7 +81,7 @@ export function isSlotAvailable(
 }
 
 export function getMeetingDuration(meeting: Meeting): number {
-  const start = new Date(meeting.start_time)
-  const end = new Date(meeting.end_time)
+  const start = new Date(meeting.start_at)
+  const end = new Date(meeting.end_at)
   return Math.round((end.getTime() - start.getTime()) / (1000 * 60))
 }
