@@ -20,7 +20,9 @@ import {
   Circle,
   ChevronUp,
   ChevronDown,
-  Loader2
+  Loader2,
+  Link2,
+  Copy
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -706,6 +708,35 @@ export default function StoreDetailsPage() {
           </div>
         </div>
 
+      </div>
+
+      {/* Public Store Link */}
+      <div className="bg-[#3d2d5a] border border-[#5a4985]/40 rounded-xl p-5">
+        <h3 className="text-[16px] font-bold text-white mb-3 flex items-center gap-2">
+          <Link2 className="h-4 w-4 text-[#a855f7]" />
+          رابط صفحة التاجر
+        </h3>
+        <div className="flex items-center gap-3 bg-[#2d1f4e] p-3 rounded-lg">
+          <code className="text-[14px] text-[#a855f7] flex-1 truncate">
+            {typeof window !== 'undefined' ? window.location.origin : 'https://zid-2.netlify.app'}/public/store/{storeId}
+          </code>
+          <button
+            onClick={() => navigator.clipboard.writeText(`${typeof window !== 'undefined' ? window.location.origin : 'https://zid-2.netlify.app'}/public/store/${storeId}`)}
+            className="p-2 hover:bg-[#3d2d5a] rounded-lg transition-colors"
+            title="نسخ الرابط"
+          >
+            <Copy className="h-4 w-4 text-[#8b7fad]" />
+          </button>
+          <a
+            href={`/public/store/${storeId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 hover:bg-[#3d2d5a] rounded-lg transition-colors"
+            title="فتح الصفحة"
+          >
+            <ExternalLink className="h-4 w-4 text-[#8b7fad]" />
+          </a>
+        </div>
       </div>
 
       {/* Notes */}

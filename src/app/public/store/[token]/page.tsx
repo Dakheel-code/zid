@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface PublicStoreData {
   store: {
@@ -52,46 +53,88 @@ export default function PublicStorePage() {
   const [newTask, setNewTask] = useState({ title: '', description: '', name: '', contact: '' })
   const [submitting, setSubmitting] = useState(false)
 
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // TODO: Fetch from API
-        // const response = await fetch(`/api/public/store/${token}`)
-        // const result = await response.json()
-        
-        // Mock data for testing
-        const mockData: PublicStoreData = {
+        // token هو الآن store_id مباشرة
+        const storeId = token
+
+        // جلب بيانات المتجر
+        const { data: storeData, error: storeError } = await supabase
+          .from('stores')
+          .select('id, store_name, store_logo_url, store_url, assigned_manager_id')
+          .eq('id', storeId)
+          .single()
+
+        if (storeError || !storeData) {
+          setError('المتجر غير موجود')
+          setLoading(false)
+          return
+        }
+
+        // جلب بيانات مدير العلاقة
+        let managerData = { id: '', name: null, phone: null, avatar_url: null }
+        if (storeData.assigned_manager_id) {
+          const { data: manager } = await supabase
+            .from('profiles')
+            .select('id, name, phone, avatar_url')
+            .eq('id', storeData.assigned_manager_id)
+            .single()
+          
+          if (manager) {
+            managerData = manager
+          }
+        }
+
+        // جلب مهام المتجر
+        const { data: tasksData } = await supabase
+          .from('store_tasks')
+          .select('id, title, description, status, section_title')
+          .eq('store_id', storeId)
+          .eq('visible_to_merchant', true)
+          .order('sort_order', { ascending: true })
+
+        const formattedData: PublicStoreData = {
           store: {
-            id: '1',
-            store_name: 'متجر الإلكترونيات',
-            store_logo_url: null,
-            store_url: 'https://example.zid.store'
+            id: storeData.id,
+            store_name: storeData.store_name,
+            store_logo_url: storeData.store_logo_url,
+            store_url: storeData.store_url
           },
           manager: {
-            id: '1',
-            name: 'محمد علي',
-            phone: '+966501234567',
-            avatar_url: null
+            id: managerData.id || '',
+            name: managerData.name,
+            phone: managerData.phone,
+            avatar_url: managerData.avatar_url
           },
-          tasks: [
-            { id: '1', title: 'مراجعة إعدادات المتجر', description: null, status: 'done', section_title: 'إعداد المتجر' },
-            { id: '2', title: 'إضافة طرق الدفع', description: null, status: 'pending', section_title: 'إعداد المتجر' },
-            { id: '3', title: 'إعداد الشحن', description: null, status: 'pending', section_title: 'إعداد المتجر' },
-            { id: '4', title: 'مراجعة المنتجات', description: null, status: 'done', section_title: 'المنتجات' }
-          ],
+          tasks: (tasksData || []).map(task => ({
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: task.status === 'done' ? 'done' : 'pending',
+            section_title: task.section_title
+          })),
           is_expired: false,
           expires_at: null
         }
         
-        setData(mockData)
+        setData(formattedData)
         setLoading(false)
       } catch (err) {
+        console.error('Error fetching store data:', err)
         setError('حدث خطأ في تحميل البيانات')
         setLoading(false)
       }
     }
 
-    fetchData()
+    if (token) {
+      fetchData()
+    }
   }, [token])
 
   const handleSubmitTask = async () => {
