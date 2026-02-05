@@ -165,9 +165,22 @@ export default function PublicStorePage() {
       {/* Header */}
       <header className="bg-[#1a1230] border-b border-[#3d3555] sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-center gap-3">
-            <Store className="h-6 w-6 text-purple-400" />
-            <h1 className="font-bold text-lg text-white">صفحة متابعة المهام</h1>
+          <div className="flex flex-col items-center gap-3">
+            <h1 className="font-bold text-lg text-white">متابعة المهام</h1>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#3d3555] rounded-lg flex items-center justify-center">
+                {data.store.store_logo_url ? (
+                  <img 
+                    src={data.store.store_logo_url} 
+                    alt={data.store.store_name || ''} 
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                ) : (
+                  <Store className="h-5 w-5 text-purple-400" />
+                )}
+              </div>
+              <span className="text-white font-medium">{data.store.store_name || 'متجرك'}</span>
+            </div>
           </div>
         </div>
       </header>
