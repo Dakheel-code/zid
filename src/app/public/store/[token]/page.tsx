@@ -497,7 +497,7 @@ export default function PublicStorePage() {
           <div className="p-3 sm:p-4 border-b border-[#3d3555]">
             <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
               <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
-              الملاحظات
+              التعليقات
             </h2>
           </div>
           
@@ -515,7 +515,7 @@ export default function PublicStorePage() {
                 >
                   <div className="flex items-center justify-between mb-1 gap-2">
                     <span className="text-[10px] sm:text-xs font-medium text-white/80">
-                      {comment.sender_type === 'merchant' ? 'أنت' : 'مدير العلاقة'}
+                      {comment.sender_type === 'merchant' ? 'أنت' : (data.manager.name || 'مدير العلاقة')}
                     </span>
                     <span className="text-[10px] text-white/60">
                       {new Date(comment.created_at).toLocaleDateString('ar-SA', { 
@@ -530,7 +530,7 @@ export default function PublicStorePage() {
                 </div>
               ))
             ) : (
-              <p className="text-center text-white/50 py-6 text-sm">لا توجد ملاحظات بعد</p>
+              <p className="text-center text-white/50 py-6 text-sm">لا توجد تعليقات بعد</p>
             )}
           </div>
           
@@ -539,7 +539,7 @@ export default function PublicStorePage() {
             <div className="flex gap-2">
               <input
                 className="flex-1 px-3 py-2.5 sm:py-2 bg-[#1a1230] border border-[#3d3555] rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500 text-sm"
-                placeholder="اكتب ملاحظتك..."
+                placeholder="اكتب تعليقك..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSubmitComment()}

@@ -62,88 +62,58 @@ export function NotificationBell() {
   const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
 
-  // Fetch notifications (mock data when Supabase not configured)
+  // Fetch notifications from database
   const fetchNotifications = useCallback(async () => {
     if (!isSupabaseConfigured()) {
-      // Mock data for development
-      const mockNotifications: MockNotification[] = [
-        {
-          id: '1',
-          type: 'store',
-          title: 'متجر جديد مسند',
-          body: 'تم إسناد متجر الإلكترونيات إليك',
-          priority: 'normal',
-          link_url: '/manager/stores',
-          is_read: false,
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          type: 'task',
-          title: 'مهمة جديدة من التاجر',
-          body: 'أحمد محمد أرسل طلب جديد',
-          priority: 'important',
-          link_url: '/manager/store/1',
-          is_read: false,
-          created_at: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: '3',
-          type: 'meeting',
-          title: 'اجتماع قادم',
-          body: 'لديك اجتماع مع متجر الأناقة بعد ساعة',
-          priority: 'urgent',
-          link_url: '/manager/meetings',
-          is_read: false,
-          created_at: new Date(Date.now() - 1800000).toISOString()
-        },
-        {
-          id: '4',
-          type: 'announcement',
-          title: 'تعميم جديد من الإدارة',
-          body: 'تم إضافة ميزات جديدة للوحة التحكم',
-          priority: 'normal',
-          link_url: '/manager/announcements',
-          is_read: true,
-          created_at: new Date(Date.now() - 7200000).toISOString()
-        },
-        {
-          id: '5',
-          type: 'task',
-          title: 'تذكير: مهمة متأخرة',
-          body: 'مهمة تفعيل الدفع الإلكتروني متأخرة يومين',
-          priority: 'urgent',
-          link_url: '/manager/store/2',
-          is_read: false,
-          created_at: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: '6',
-          type: 'store',
-          title: 'متجر جديد في انتظار التفعيل',
-          body: 'متجر الهدايا بحاجة لإكمال الإعدادات',
-          priority: 'important',
-          link_url: '/manager/stores',
-          is_read: true,
-          created_at: new Date(Date.now() - 172800000).toISOString()
-        }
-      ]
-      setNotifications(mockNotifications)
-      setUnreadCount(mockNotifications.filter(n => !n.is_read).length)
+      setNotifications([])
+      setUnreadCount(0)
       setLoading(false)
       return
     }
 
-    // Real Supabase fetch
+    // Fetch directly from notifications table
     try {
-      const { getNotifications, getUnreadCount } = await import('@/lib/services/notification-service')
-      const { notifications: data } = await getNotifications({ limit: 10 })
-      setNotifications(data as MockNotification[])
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
       
-      const count = await getUnreadCount()
-      setUnreadCount(count)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setNotifications([])
+        setUnreadCount(0)
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (error) {
+        console.error('Error fetching notifications:', error)
+        setNotifications([])
+        setUnreadCount(0)
+      } else {
+        const notifs = (data || []).map(n => ({
+          id: n.id,
+          type: n.type || 'task',
+          title: n.title,
+          body: n.body,
+          priority: n.priority || 'normal',
+          link_url: n.link_url,
+          is_read: n.is_read,
+          created_at: n.created_at
+        })) as MockNotification[]
+        
+        setNotifications(notifs)
+        setUnreadCount(notifs.filter(n => !n.is_read).length)
+      }
     } catch (error) {
       console.error('Error fetching notifications:', error)
+      setNotifications([])
+      setUnreadCount(0)
     }
     setLoading(false)
   }, [])
@@ -156,16 +126,51 @@ export function NotificationBell() {
   // Handle mark as read
   const handleMarkAsRead = async (notification: MockNotification) => {
     if (notification.is_read) return
+    
+    // Update local state first for immediate UI feedback
     setNotifications(prev => 
       prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
     )
     setUnreadCount(prev => Math.max(0, prev - 1))
+    
+    // Save to database if Supabase is configured
+    if (isSupabaseConfigured()) {
+      try {
+        const { createClient } = await import('@/lib/supabase/client')
+        const supabase = createClient()
+        await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('id', notification.id)
+      } catch (error) {
+        console.error('Error marking notification as read:', error)
+      }
+    }
   }
 
   // Handle mark all as read
   const handleMarkAllAsRead = async () => {
+    // Update local state first for immediate UI feedback
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
     setUnreadCount(0)
+    
+    // Save to database if Supabase is configured
+    if (isSupabaseConfigured()) {
+      try {
+        const { createClient } = await import('@/lib/supabase/client')
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          await supabase
+            .from('notifications')
+            .update({ is_read: true })
+            .eq('recipient_user_id', user.id)
+            .eq('is_read', false)
+        }
+      } catch (error) {
+        console.error('Error marking all notifications as read:', error)
+      }
+    }
   }
 
   // Handle notification click

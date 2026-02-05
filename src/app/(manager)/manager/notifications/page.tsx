@@ -41,14 +41,13 @@ export default function NotificationsPage() {
 
       if (error) {
         console.error('Error fetching notifications:', error)
-        // Use mock data if table doesn't exist
-        setNotifications(getMockNotifications())
+        setNotifications([])
       } else {
         setNotifications(data || [])
       }
     } catch (error) {
       console.error('Error:', error)
-      setNotifications(getMockNotifications())
+      setNotifications([])
     } finally {
       setLoading(false)
     }
@@ -112,19 +111,68 @@ export default function NotificationsPage() {
   ]
 
   const markAsRead = async (id: string) => {
+    // Update local state first
     setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, is_read: true } : n)
     )
+    
+    // Save to database
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id)
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
+    }
   }
 
   const markAllAsRead = async () => {
+    // Update local state first
     setNotifications(prev =>
       prev.map(n => ({ ...n, is_read: true }))
     )
+    
+    // Save to database
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('recipient_user_id', user.id)
+          .eq('is_read', false)
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error)
+    }
   }
 
   const deleteNotification = async (id: string) => {
+    // Update local state first
     setNotifications(prev => prev.filter(n => n.id !== id))
+    
+    // Delete from database
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id)
+    } catch (error) {
+      console.error('Error deleting notification:', error)
+    }
   }
 
   const formatTime = (dateString: string) => {
