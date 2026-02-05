@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { User, Mail, Phone, Lock, Save, Loader2 } from 'lucide-react'
+import { User, Mail, Phone, Lock, Save, Loader2, Bell, MessageCircle, Slack } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import { createBrowserClient } from '@supabase/ssr'
 
 interface UserProfile {
@@ -14,6 +15,9 @@ interface UserProfile {
   email: string
   phone: string | null
   role: string
+  slack_webhook_url?: string | null
+  whatsapp_notification?: boolean
+  email_notification?: boolean
 }
 
 export default function SettingsPage() {
@@ -28,6 +32,11 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  
+  // Notification settings
+  const [slackWebhookUrl, setSlackWebhookUrl] = useState('')
+  const [whatsappNotification, setWhatsappNotification] = useState(false)
+  const [emailNotification, setEmailNotification] = useState(true)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,7 +50,7 @@ export default function SettingsPage() {
         if (user) {
           const { data: profileData, error } = await supabase
             .from('profiles')
-            .select('id, name, email, phone, role')
+            .select('id, name, email, phone, role, slack_webhook_url, whatsapp_notification, email_notification')
             .eq('id', user.id)
             .single()
           
@@ -49,6 +58,9 @@ export default function SettingsPage() {
             setProfile(profileData)
             setName(profileData.name || '')
             setPhone(profileData.phone || '')
+            setSlackWebhookUrl(profileData.slack_webhook_url || '')
+            setWhatsappNotification(profileData.whatsapp_notification || false)
+            setEmailNotification(profileData.email_notification !== false)
           }
         }
       } catch (error) {
@@ -72,7 +84,10 @@ export default function SettingsPage() {
         .from('profiles')
         .update({ 
           name: name,
-          phone: phone || null
+          phone: phone || null,
+          slack_webhook_url: slackWebhookUrl || null,
+          whatsapp_notification: whatsappNotification,
+          email_notification: emailNotification
         })
         .eq('id', profile.id)
       
@@ -218,6 +233,89 @@ export default function SettingsPage() {
                   <Save className="h-4 w-4 ml-2" />
                 )}
                 حفظ المعلومات
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base lg:text-lg">
+              <Bell className="h-5 w-5" />
+              إعدادات الإشعارات
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Email Notifications */}
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Mail className="h-5 w-5 text-blue-400" />
+                </div>
+                <div>
+                  <p className="font-medium">إشعارات البريد الإلكتروني</p>
+                  <p className="text-sm text-muted-foreground">استلام الإشعارات عبر البريد الإلكتروني</p>
+                </div>
+              </div>
+              <Switch
+                checked={emailNotification}
+                onCheckedChange={setEmailNotification}
+              />
+            </div>
+
+            {/* WhatsApp Notifications */}
+            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <MessageCircle className="h-5 w-5 text-green-400" />
+                </div>
+                <div>
+                  <p className="font-medium">إشعارات الواتساب</p>
+                  <p className="text-sm text-muted-foreground">استلام الإشعارات عبر الواتساب (يتطلب رقم جوال)</p>
+                </div>
+              </div>
+              <Switch
+                checked={whatsappNotification}
+                onCheckedChange={setWhatsappNotification}
+                disabled={!phone}
+              />
+            </div>
+
+            {/* Slack Integration */}
+            <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <Slack className="h-5 w-5 text-purple-400" />
+                </div>
+                <div>
+                  <p className="font-medium">ربط Slack</p>
+                  <p className="text-sm text-muted-foreground">استلام الإشعارات في قناة Slack</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="slack-webhook">Webhook URL</Label>
+                <Input 
+                  id="slack-webhook" 
+                  value={slackWebhookUrl}
+                  onChange={(e) => setSlackWebhookUrl(e.target.value)}
+                  placeholder="https://hooks.slack.com/services/..."
+                  dir="ltr"
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  يمكنك الحصول على Webhook URL من إعدادات تطبيق Slack الخاص بك
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleSaveProfile} disabled={saving}>
+                {saving ? (
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 ml-2" />
+                )}
+                حفظ إعدادات الإشعارات
               </Button>
             </div>
           </CardContent>
