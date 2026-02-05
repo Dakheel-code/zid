@@ -130,29 +130,27 @@ export default function ManagerMeetingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">الاجتماعات</h1>
-          <p className="text-muted-foreground">إدارة مواعيدك واجتماعاتك</p>
-        </div>
+      <div>
+        <h1 className="text-xl lg:text-2xl font-bold text-foreground">الاجتماعات</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">إدارة مواعيدك واجتماعاتك</p>
       </div>
 
       {/* Booking Link */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
+        <CardContent className="p-3 lg:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <Link2 className="h-5 w-5 text-muted-foreground" />
-              <div>
+              <Link2 className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0">
                 <p className="text-sm font-medium">رابط الحجز الخاص بك</p>
-                <code className="text-xs bg-muted px-2 py-1 rounded">
-                  {window.location.origin}/book/{bookingSlug}
+                <code className="text-xs bg-muted px-2 py-1 rounded block truncate">
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/book/{bookingSlug}
                 </code>
               </div>
             </div>
-            <Button variant="secondary" size="sm" onClick={copyBookingLink}>
+            <Button variant="secondary" size="sm" onClick={copyBookingLink} className="w-full sm:w-auto">
               <Copy className="h-4 w-4 ml-2" />
               نسخ الرابط
             </Button>
@@ -161,24 +159,24 @@ export default function ManagerMeetingsPage() {
       </Card>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b">
+      <div className="flex gap-1 lg:gap-2 border-b overflow-x-auto pb-px">
         {[
-          { key: 'upcoming', label: 'الاجتماعات القادمة', icon: Calendar },
+          { key: 'upcoming', label: 'الاجتماعات', icon: Calendar },
           { key: 'availability', label: 'ساعات العمل', icon: Clock },
-          { key: 'timeoff', label: 'أوقات الراحة', icon: CalendarOff },
+          { key: 'timeoff', label: 'الراحة', icon: CalendarOff },
           { key: 'settings', label: 'الإعدادات', icon: Settings }
         ].map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as typeof activeTab)}
-            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
+            className={`flex items-center gap-1 lg:gap-2 px-3 lg:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm ${
               activeTab === tab.key
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <tab.icon className="h-4 w-4" />
-            {tab.label}
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>

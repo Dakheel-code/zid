@@ -2,6 +2,7 @@
 
 import { AdminSidebar } from '@/components/layout/admin-sidebar'
 import { Header } from '@/components/layout/header'
+import { MobileNav } from '@/components/layout/mobile-nav'
 
 export default function AdminLayout({
   children,
@@ -11,9 +12,10 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-bg-primary">
       <AdminSidebar />
-      <div className="lg:pr-64">
+      <MobileNav type="admin" />
+      <div className="lg:pr-60">
         <Header />
-        <main className="p-6">{children}</main>
+        <main className="p-4 lg:p-6 pt-20 lg:pt-6">{children}</main>
       </div>
     </div>
   )

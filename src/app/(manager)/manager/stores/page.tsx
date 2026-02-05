@@ -85,16 +85,16 @@ export default function ManagerStoresPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">المتاجر المسندة</h1>
-        <p className="text-muted-foreground">قائمة المتاجر المسندة إليك</p>
+        <h1 className="text-xl lg:text-2xl font-bold text-foreground">المتاجر المسندة</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">قائمة المتاجر المسندة إليك</p>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 min-w-[200px] max-w-md">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="بحث بالاسم أو الرابط..."

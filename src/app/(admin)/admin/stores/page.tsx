@@ -213,14 +213,14 @@ export default function AdminStoresPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Page Header - العنوان يضرب العين */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-[32px] font-extrabold text-white tracking-tight">إدارة المتاجر</h1>
-          <p className="text-[15px] text-[#c4b5fd] mt-2">عرض وإدارة جميع المتاجر</p>
+          <h1 className="text-2xl lg:text-[32px] font-extrabold text-white tracking-tight">إدارة المتاجر</h1>
+          <p className="text-sm lg:text-[15px] text-[#c4b5fd] mt-1 lg:mt-2">عرض وإدارة جميع المتاجر</p>
         </div>
-        <Button variant="primary" size="md" onClick={handleAddStore}>
+        <Button variant="primary" size="md" onClick={handleAddStore} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 ml-2" />
           إضافة متجر
         </Button>
@@ -251,17 +251,17 @@ export default function AdminStoresPage() {
       </div>
 
       {/* Toolbar - شريط البحث والفلترة */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-[#3d2d5a] border border-[#5a4985]/40 rounded-xl">
+      <div className="p-3 lg:p-4 bg-[#3d2d5a] border border-[#5a4985]/40 rounded-xl">
         {/* Search & Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="relative sm:col-span-2 lg:col-span-1">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8b7fad]" />
             <input
               type="text"
               placeholder="ابحث عن متجر..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-64 h-10 pr-10 pl-4 text-[14px] bg-[#2d1f4e] border border-[#5a4985]/60 rounded-lg text-white placeholder:text-[#8b7fad] focus:outline-none focus:border-[#a855f7] focus:ring-2 focus:ring-[#a855f7]/30 transition-all"
+              className="w-full h-10 pr-10 pl-4 text-[14px] bg-[#2d1f4e] border border-[#5a4985]/60 rounded-lg text-white placeholder:text-[#8b7fad] focus:outline-none focus:border-[#a855f7] focus:ring-2 focus:ring-[#a855f7]/30 transition-all"
             />
           </div>
           <select

@@ -98,24 +98,24 @@ export default function ManagerDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">لوحة التحكم</h1>
-        <p className="text-muted-foreground">مرحباً بك، هذه نظرة عامة على متاجرك</p>
+        <h1 className="text-xl lg:text-2xl font-bold text-foreground">لوحة التحكم</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">مرحباً بك، هذه نظرة عامة على متاجرك</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
         {statCards.map((stat, index) => (
           <Card key={index}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="text-3xl font-bold mt-1">{stat.value}</p>
+                  <p className="text-xs lg:text-sm text-muted-foreground">{stat.title}</p>
+                  <p className="text-2xl lg:text-3xl font-bold mt-1">{stat.value}</p>
                 </div>
-                <div className={`p-3 rounded-full ${stat.bgColor}`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                <div className={`p-2 lg:p-3 rounded-full ${stat.bgColor}`}>
+                  <stat.icon className={`h-5 w-5 lg:h-6 lg:w-6 ${stat.color}`} />
                 </div>
               </div>
             </CardContent>
