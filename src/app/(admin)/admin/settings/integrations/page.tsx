@@ -33,8 +33,11 @@ export default function IntegrationsSettingsPage() {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [testing, setTesting] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [userPhone, setUserPhone] = useState<string | null>(null)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,11 +52,13 @@ export default function IntegrationsSettingsPage() {
           setUserId(user.id)
           const { data, error } = await supabase
             .from('profiles')
-            .select('slack_webhook_url, whatsapp_notification, email_notification')
+            .select('email, phone, slack_webhook_url, whatsapp_notification, email_notification')
             .eq('id', user.id)
             .single()
           
           if (data && !error) {
+            setUserEmail(data.email || null)
+            setUserPhone(data.phone || null)
             setSettings({
               slack_webhook_url: data.slack_webhook_url || '',
               whatsapp_notification: data.whatsapp_notification || false,
@@ -95,6 +100,43 @@ export default function IntegrationsSettingsPage() {
       setMessage({ type: 'error', text: 'حدث خطأ أثناء حفظ الإعدادات' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleTestConnection = async (channel: 'slack' | 'whatsapp' | 'email') => {
+    setTesting(channel)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channel,
+          webhook_url: settings.slack_webhook_url,
+          phone: userPhone,
+          email: userEmail
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setMessage({ 
+          type: 'success', 
+          text: channel === 'slack' 
+            ? 'تم إرسال رسالة اختبار إلى Slack بنجاح!' 
+            : channel === 'whatsapp'
+            ? 'إعدادات WhatsApp جاهزة!'
+            : 'إعدادات البريد جاهزة!'
+        })
+      } else {
+        setMessage({ type: 'error', text: result.error || 'فشل الاختبار' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'حدث خطأ أثناء الاختبار' })
+    } finally {
+      setTesting(null)
     }
   }
 
@@ -234,6 +276,19 @@ export default function IntegrationsSettingsPage() {
                 <li>انسخ Webhook URL</li>
               </ol>
             </div>
+            <Button 
+              variant="secondary" 
+              size="sm"
+              onClick={() => handleTestConnection('slack')}
+              disabled={testing === 'slack' || !settings.slack_webhook_url}
+            >
+              {testing === 'slack' ? (
+                <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+              ) : (
+                <CheckCircle className="h-4 w-4 ml-2" />
+              )}
+              اختبار الاتصال
+            </Button>
           </CardContent>
         </Card>
       </div>
