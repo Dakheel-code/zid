@@ -6,7 +6,8 @@ import {
   ChevronLeft,
   Shield,
   Palette,
-  Globe
+  Globe,
+  Link2
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
@@ -47,6 +48,13 @@ const settingsLinks: SettingsLink[] = [
     href: '/admin/settings/locale',
     icon: Globe,
     iconColor: 'text-amber-500 bg-amber-100'
+  },
+  {
+    title: 'ربط القنوات',
+    description: 'ربط سلاك وواتساب والبريد الإلكتروني',
+    href: '/admin/settings/integrations',
+    icon: Link2,
+    iconColor: 'text-pink-500 bg-pink-100'
   }
 ]
 
