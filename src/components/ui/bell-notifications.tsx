@@ -98,7 +98,7 @@ export function BellNotificationsDropdown({
                           {notification.title}
                         </p>
                         <p className="text-caption text-fg-secondary mt-0.5 line-clamp-2">
-                          {notification.message}
+                          {notification.body}
                         </p>
                         <p className="text-caption text-fg-muted mt-1">
                           {formatNotificationTime(notification.created_at)}
