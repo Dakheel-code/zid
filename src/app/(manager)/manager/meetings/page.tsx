@@ -66,25 +66,8 @@ export default function ManagerMeetingsPage() {
     
     fetchUserSlug()
     
-    // TODO: Fetch from API
-    const mockMeetings: Meeting[] = [
-      {
-        id: '1',
-        start_at: new Date(Date.now() + 3600000).toISOString(),
-        end_at: new Date(Date.now() + 5400000).toISOString(),
-        guest_name: 'أحمد محمد',
-        guest_email: 'ahmed@example.com',
-        status: 'booked'
-      },
-      {
-        id: '2',
-        start_at: new Date(Date.now() + 86400000).toISOString(),
-        end_at: new Date(Date.now() + 88200000).toISOString(),
-        guest_name: 'سارة علي',
-        guest_email: 'sara@example.com',
-        status: 'booked'
-      }
-    ]
+    // سيتم جلب الاجتماعات من قاعدة البيانات
+    const mockMeetings: Meeting[] = []
     
     const mockRules: AvailabilityRule[] = [
       { id: '1', day_of_week: 0, start_time: '09:00', end_time: '17:00' },

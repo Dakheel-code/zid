@@ -16,35 +16,8 @@ interface Task {
   storeName: string
 }
 
-const mockTasks: Task[] = [
-  {
-    id: '1',
-    title: 'متابعة تفعيل المتجر',
-    description: 'التواصل مع العميل لإكمال إعدادات المتجر',
-    status: 'pending',
-    priority: 'high',
-    dueDate: '2026-02-05',
-    storeName: 'متجر الأناقة'
-  },
-  {
-    id: '2',
-    title: 'مراجعة طلب الترقية',
-    description: 'مراجعة طلب ترقية الباقة للعميل',
-    status: 'in_progress',
-    priority: 'medium',
-    dueDate: '2026-02-06',
-    storeName: 'متجر التقنية'
-  },
-  {
-    id: '3',
-    title: 'تدريب على لوحة التحكم',
-    description: 'جلسة تدريبية للعميل على استخدام لوحة التحكم',
-    status: 'completed',
-    priority: 'low',
-    dueDate: '2026-02-03',
-    storeName: 'متجر الهدايا'
-  }
-]
+// سيتم جلب المهام من قاعدة البيانات
+const mockTasks: Task[] = []
 
 const statusConfig = {
   pending: { label: 'قيد الانتظار', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
