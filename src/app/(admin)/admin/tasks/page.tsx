@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   CheckCircle2, 
   Circle, 
@@ -14,11 +14,13 @@ import {
   Calendar,
   AlertCircle,
   Settings2,
-  X
+  X,
+  Loader2
 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { createBrowserClient } from '@supabase/ssr'
 
 /**
  * Tasks Page - Dark Purple Theme
@@ -32,7 +34,7 @@ interface Task {
   store_id: string
   store_name: string
   section: string
-  status: 'pending' | 'in_progress' | 'done' | 'blocked'
+  status: 'new' | 'in_progress' | 'done' | 'blocked'
   type: 'template' | 'manual'
   due_date?: string
   created_at: string
@@ -45,28 +47,17 @@ interface AccountManager {
   stores_count: number
 }
 
-export default function TasksPage() {
-  // مدراء العلاقات
-  const accountManagers: AccountManager[] = [
-    { id: '1', name: 'سارة أحمد', stores_count: 5 },
-    { id: '2', name: 'محمد علي', stores_count: 8 },
-    { id: '3', name: 'فاطمة خالد', stores_count: 3 },
-  ]
+interface StoreData {
+  id: string
+  store_name: string
+  assigned_manager_id: string
+}
 
-  // المهام (في الواقع تأتي من API)
-  const allTasks: Task[] = [
-    // مهام سارة أحمد
-    { id: '1', title: 'مراجعة إعدادات المتجر', store_id: '1', store_name: 'متجر الإلكترونيات', section: 'إعداد المتجر', status: 'done', type: 'template', due_date: '2024-02-01', created_at: '2024-01-15', assigned_to: '1' },
-    { id: '2', title: 'إضافة طرق الدفع', store_id: '1', store_name: 'متجر الإلكترونيات', section: 'إعداد المتجر', status: 'in_progress', type: 'template', due_date: '2024-02-05', created_at: '2024-01-15', assigned_to: '1' },
-    { id: '3', title: 'التواصل مع العميل بخصوص الشحن', store_id: '1', store_name: 'متجر الإلكترونيات', section: 'مهام يدوية', status: 'pending', type: 'manual', due_date: '2024-02-03', created_at: '2024-02-01', assigned_to: '1' },
-    { id: '4', title: 'مراجعة المنتجات', store_id: '2', store_name: 'متجر الأزياء', section: 'المنتجات', status: 'pending', type: 'template', created_at: '2024-01-20', assigned_to: '1' },
-    // مهام محمد علي
-    { id: '5', title: 'إعداد Google Analytics', store_id: '3', store_name: 'متجر الأثاث', section: 'التسويق', status: 'pending', type: 'template', due_date: '2024-02-10', created_at: '2024-01-25', assigned_to: '2' },
-    { id: '6', title: 'تحديث بيانات المتجر', store_id: '3', store_name: 'متجر الأثاث', section: 'مهام يدوية', status: 'done', type: 'manual', created_at: '2024-01-28', assigned_to: '2' },
-    { id: '7', title: 'إعداد الشحن', store_id: '4', store_name: 'متجر الهدايا', section: 'إعداد المتجر', status: 'blocked', type: 'template', due_date: '2024-02-01', created_at: '2024-01-22', assigned_to: '2' },
-    // مهام فاطمة خالد
-    { id: '8', title: 'ربط وسائل التواصل', store_id: '5', store_name: 'متجر العطور', section: 'التسويق', status: 'in_progress', type: 'template', due_date: '2024-02-08', created_at: '2024-01-30', assigned_to: '3' },
-  ]
+export default function TasksPage() {
+  const [accountManagers, setAccountManagers] = useState<AccountManager[]>([])
+  const [allTasks, setAllTasks] = useState<Task[]>([])
+  const [stores, setStores] = useState<StoreData[]>([])
+  const [loading, setLoading] = useState(true)
 
   const [selectedManager, setSelectedManager] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>('all')
@@ -75,6 +66,7 @@ export default function TasksPage() {
   
   // Modal state
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [newTask, setNewTask] = useState({
     title: '',
     store_id: '',
@@ -82,30 +74,127 @@ export default function TasksPage() {
     description: ''
   })
 
-  // المتاجر المتاحة
-  const stores = [
-    { id: '1', name: 'متجر الإلكترونيات' },
-    { id: '2', name: 'متجر الأزياء' },
-    { id: '3', name: 'متجر الأثاث' },
-    { id: '4', name: 'متجر الهدايا' },
-    { id: '5', name: 'متجر العطور' },
-  ]
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-  const handleAddTask = () => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // جلب المدراء والمتاجر والمهام بشكل متوازي
+        const [managersRes, storesRes, tasksRes] = await Promise.all([
+          supabase.from('profiles').select('id, name, email').eq('role', 'manager'),
+          supabase.from('stores').select('id, store_name, assigned_manager_id'),
+          supabase.from('store_tasks').select('id, title, description, status, due_date, created_at, store_id, task_type')
+        ])
+
+        // معالجة المدراء
+        const managers = managersRes.data || []
+        const storesData = storesRes.data || []
+        const tasksData = tasksRes.data || []
+
+        // حساب عدد المتاجر لكل مدير
+        const managersWithStats = managers.map(m => ({
+          id: m.id,
+          name: m.name || m.email?.split('@')[0] || 'مدير',
+          stores_count: storesData.filter(s => s.assigned_manager_id === m.id).length
+        }))
+        setAccountManagers(managersWithStats)
+        setStores(storesData)
+
+        // إنشاء خريطة للمتاجر
+        const storeMap = new Map(storesData.map(s => [s.id, s]))
+
+        // تحويل المهام للشكل المطلوب
+        const formattedTasks: Task[] = tasksData.map(task => {
+          const store = storeMap.get(task.store_id)
+          return {
+            id: task.id,
+            title: task.title,
+            description: task.description || '',
+            store_id: task.store_id,
+            store_name: store?.store_name || 'متجر غير معروف',
+            section: task.task_type === 'manual' ? 'مهام يدوية' : 'مهام القالب',
+            status: task.status as Task['status'],
+            type: (task.task_type || 'template') as 'template' | 'manual',
+            due_date: task.due_date,
+            created_at: task.created_at,
+            assigned_to: store?.assigned_manager_id || ''
+          }
+        })
+        setAllTasks(formattedTasks)
+
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  const handleAddTask = async () => {
     if (!newTask.title || !newTask.store_id) {
       alert('يرجى إدخال عنوان المهمة واختيار المتجر')
       return
     }
-    // في الواقع سيتم إرسال البيانات إلى API
-    console.log('Adding task:', newTask)
-    setShowAddTaskModal(false)
-    setNewTask({ title: '', store_id: '', due_date: '', description: '' })
+    
+    setSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      const { data, error } = await supabase
+        .from('store_tasks')
+        .insert({
+          title: newTask.title,
+          description: newTask.description || null,
+          store_id: newTask.store_id,
+          due_date: newTask.due_date || null,
+          status: 'new',
+          task_type: 'manual',
+          created_by_id: user?.id
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // إضافة المهمة للقائمة
+      const store = stores.find(s => s.id === newTask.store_id)
+      const newTaskFormatted: Task = {
+        id: data.id,
+        title: data.title,
+        description: data.description || '',
+        store_id: data.store_id,
+        store_name: store?.store_name || 'متجر غير معروف',
+        section: 'مهام يدوية',
+        status: 'new',
+        type: 'manual',
+        due_date: data.due_date,
+        created_at: data.created_at,
+        assigned_to: store?.assigned_manager_id || ''
+      }
+      setAllTasks([newTaskFormatted, ...allTasks])
+      
+      setShowAddTaskModal(false)
+      setNewTask({ title: '', store_id: '', due_date: '', description: '' })
+    } catch (error) {
+      console.error('Error adding task:', error)
+      alert('حدث خطأ أثناء إضافة المهمة')
+    } finally {
+      setSaving(false)
+    }
   }
 
   // فلترة المهام
   const filteredTasks = allTasks.filter(task => {
     if (selectedManager && task.assigned_to !== selectedManager) return false
-    if (filterStatus !== 'all' && task.status !== filterStatus) return false
+    if (filterStatus !== 'all') {
+      if (filterStatus === 'pending' && task.status !== 'new') return false
+      if (filterStatus !== 'pending' && task.status !== filterStatus) return false
+    }
     if (filterType !== 'all' && task.type !== filterType) return false
     return true
   })
@@ -173,10 +262,18 @@ export default function TasksPage() {
   // إحصائيات
   const stats = {
     total: filteredTasks.length,
-    pending: filteredTasks.filter(t => t.status === 'pending').length,
+    pending: filteredTasks.filter(t => t.status === 'new').length,
     inProgress: filteredTasks.filter(t => t.status === 'in_progress').length,
     done: filteredTasks.filter(t => t.status === 'done').length,
     overdue: filteredTasks.filter(t => t.status !== 'done' && isOverdue(t.due_date)).length
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+      </div>
+    )
   }
 
   return (
@@ -408,7 +505,7 @@ export default function TasksPage() {
                 >
                   <option value="">اختر المتجر...</option>
                   {stores.map(store => (
-                    <option key={store.id} value={store.id}>{store.name}</option>
+                    <option key={store.id} value={store.id}>{store.store_name}</option>
                   ))}
                 </select>
               </div>
